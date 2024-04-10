@@ -99,13 +99,15 @@ I_rec   = [Ixx_rec, 0, 0; 0, Iyy_rec, 0; 0, 0, Izz_rec];
 % Izz_bus = Izz_rec - 2 * Izz_tri;
 % I_bus   = [Ixx_bus, 0, 0; 0, Iyy_bus, 0; 0, 0, Izz_bus];
 % % Method 2:
-Ixx_tri   = (m_tri/18) * (busTri_l^2 + busTri_h^2);
-Iyy_tri   = (m_tri/36) * ((3*busTri_w^2) + 2*busTri_h^2);
-Izz_tri   = (m_tri/36) * ((3*busTri_w^2) + 2*busTri_l^2);
+Ixx_tri   = (m_tri/54) * (5*busTri_l^2 + 7*busTri_h^2);
+Iyy_tri   = (m_tri/108) * ((15*busTri_w^2) + 14*busTri_h^2);
+Izz_tri   = (m_tri/108) * ((10*busTri_w^2) + 10*busTri_l^2);
 I_tri     = [Ixx_tri, 0, 0; 0, Iyy_tri, 0; 0, 0, Izz_tri];
-T_tri_rec = [0, busRec_l/2 - busTri_l/3, -busRec_h/2 + busTri_h/3];
-I_tri_rec = ParallelAxisTheorem(I_tri, T_tri_rec, m_tri);
-I_bus     = I_rec - (2* I_tri_rec);
+T_tri_rec1 = [0, busRec_l/2 - busTri_l/3, -busRec_h/2 + busTri_h/3];
+I_tri_rec1 = ParallelAxisTheorem(I_tri, T_tri_rec1, m_tri);
+T_tri_rec2 = [busRec_w/2, -busRec_l/2 + busTri_l/3, -busRec_h/2 + busTri_h/3];
+I_tri_rec2 = ParallelAxisTheorem(I_tri, T_tri_rec2, m_tri);
+I_bus     = I_rec - I_tri_rec1 - I_tri_rec2;
 
 % Translation vector from bus frame to body frame:
 bus_frame_origin = [0, 0, sp_h + busRec_h/2];
