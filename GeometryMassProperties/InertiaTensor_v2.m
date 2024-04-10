@@ -6,7 +6,7 @@ clear;
 %{
 1. Solar Panel Frame - origin at the center of the top frace of the solar
 panel. This frame is what I'm basing all of my measurements off of.
-2. Satellite But Frame - origin at the center of the satellite bus if it
+2. Satellite Bus Frame - origin at the center of the satellite bus if it
 were a rectangle.
 3. Sensor frame - origin at center of sensor panel
 4. Body Frame - origin at center of mass
@@ -80,7 +80,7 @@ Iyy_sp = (1/12) * m_sp * (sp_w^2 + sp_h^2);
 Izz_sp = (1/12) * m_sp * (sp_l^2 + sp_w^2);
 I_sp = [Ixx_sp, 0, 0; 0, Iyy_sp, 0; 0, 0, Izz_sp];
 % Translation vector from sp frame to body frame:
-T_sp_b = [xCM, yCM, zCM];
+T_sp_b = [xCM, yCM, zCM - sp_h/2];
 % Solar Panel Inertia Tensor about CM
 I_sp_b = ParallelAxisTheorem(I_sp, T_sp_b, m_sp);
 
@@ -99,13 +99,13 @@ I_rec   = [Ixx_rec, 0, 0; 0, Iyy_rec, 0; 0, 0, Izz_rec];
 % Izz_bus = Izz_rec - 2 * Izz_tri;
 % I_bus   = [Ixx_bus, 0, 0; 0, Iyy_bus, 0; 0, 0, Izz_bus];
 % % Method 2:
-Ixx_tri   = (m_tri/6) * (busTri_l^2 + busTri_h^2);
-Iyy_tri   = (m_tri/6) * ((2*busTri_w^2) + busTri_h^2);
-Izz_tri   = (m_tri/6) * ((2*busTri_w^2) + busTri_l^2);
+Ixx_tri   = (m_tri/54) * (13*busTri_l^2 + 7*busTri_h^2);
+Iyy_tri   = (m_tri/108) * ((15*busTri_w^2) + 14*busTri_h^2);
+Izz_tri   = (m_tri/108) * ((15*busTri_w^2) + 26*busTri_l^2);
 I_tri     = [Ixx_tri, 0, 0; 0, Iyy_tri, 0; 0, 0, Izz_tri];
-T_tri_rec1 = [busRec_w/2, busRec_l/2, -busRec_h/2];
+T_tri_rec1 = [0, busRec_l/2 - busTri_l/3, -busRec_h/2 + busTri_h/3];
 I_tri_rec1 = ParallelAxisTheorem(I_tri, T_tri_rec1, m_tri);
-T_tri_rec2 = [busRec_w/2, -busRec_l/2, -busRec_h/2];
+T_tri_rec2 = [busRec_w/2, -busRec_l/2 + busTri_l/3, -busRec_h/2 + busTri_h/3];
 I_tri_rec2 = ParallelAxisTheorem(I_tri, T_tri_rec2, m_tri);
 I_bus     = I_rec - I_tri_rec1 - I_tri_rec2;
 
