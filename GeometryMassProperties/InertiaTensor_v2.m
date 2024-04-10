@@ -59,8 +59,6 @@ m_sen = m_tot * (v_sen / v_tot);
 % Sanity check 
 m_tot_check = m_bus + m_sp + m_sen;
 
-
-
 %% Calculate Center of Mass Coordinates:
 
 zCM = ((v_sp * sp_h/2) +...
@@ -90,22 +88,13 @@ Iyy_rec = (1/12) * m_rec * (busRec_w^2 + busRec_h^2);
 Izz_rec = (1/12) * m_rec * (busRec_l^2 + busRec_w^2);
 I_rec   = [Ixx_rec, 0, 0; 0, Iyy_rec, 0; 0, 0, Izz_rec];
 % % Subtract out the triangles:
-% Method 1:
-% Ixx_tri = (m_tri/6   * (busTri_l^2 + busTri_h^2))     + (m_tri * ((busRec_h/2)^2 + (busRec_l/2)^2));
-% Iyy_tri = (m_tri/6  *  (2*busTri_w^2 + (busTri_h)^2)) + (m_tri * ((busRec_h/2)^2 + (busRec_w/2)^2));
-% Izz_tri = (m_tri/6  *  (2*busTri_w^2 + (busTri_l)^2)) + (m_tri * ((busRec_l/2)^2 + (busRec_w/2)^2));
-% Ixx_bus = Ixx_rec - 2 * Ixx_tri;
-% Iyy_bus = Iyy_rec - 2 * Iyy_tri;
-% Izz_bus = Izz_rec - 2 * Izz_tri;
-% I_bus   = [Ixx_bus, 0, 0; 0, Iyy_bus, 0; 0, 0, Izz_bus];
-% % Method 2:
 Ixx_tri   = (m_tri/18) * (busTri_l^2 + busTri_h^2);
 Iyy_tri   = (m_tri/36) * ((3*busTri_w^2) + 2*busTri_h^2);
 Izz_tri   = (m_tri/36) * ((3*busTri_w^2) + 2*busTri_l^2);
 I_tri     = [Ixx_tri, 0, 0; 0, Iyy_tri, 0; 0, 0, Izz_tri];
 T_tri_rec = [0, busRec_l/2 - busTri_l/3, -busRec_h/2 + busTri_h/3];
 I_tri_rec = ParallelAxisTheorem(I_tri, T_tri_rec, m_tri);
-I_bus     = I_rec - (2* I_tri_rec);
+I_bus     = I_rec - (2 * I_tri_rec);
 
 % Translation vector from bus frame to body frame:
 bus_frame_origin = [0, 0, sp_h + busRec_h/2];
