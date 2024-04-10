@@ -1,4 +1,4 @@
-function [area, barycenter, normal] = rectangleGeometry(vertices)
+function [area, barycenter, normal] = rectangleGeometry(vertices, T_wrtCM)
 
     % Calculate the vectors representing two adjacent sides of the rectangle
     side1 = vertices(2,:) - vertices(1,:);
@@ -12,7 +12,7 @@ function [area, barycenter, normal] = rectangleGeometry(vertices)
     area = lengthSide1 * lengthSide2;
     
     % Calculate barycenter by averaging the coordinates
-    barycenter = mean(vertices, 1);
+    barycenter = mean(vertices, 1) + T_wrtCM;
     
     % Calculate the normal vector by taking the cross product of two sides
     normal = cross(side1, side2);

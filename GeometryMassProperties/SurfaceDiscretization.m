@@ -11,11 +11,13 @@ function cygnss = SurfaceDiscretization(cygnss, component)
      faceName = faces{i};
      vertices = cygnss.(component).coord.(faceName);
 
+     T_component_CM = cygnss.(component).origin - cygnss.CM;
+
      if length(vertices) == 4
-         [area, barycenter, normal] = rectangleGeometry(vertices);
+         [area, barycenter, normal] = rectangleGeometry(vertices, T_component_CM);
 
      elseif length(vertices) == 6
-         [area, barycenter, normal] = hexagonGeometry(vertices);
+         [area, barycenter, normal] = hexagonGeometry(vertices, T_component_CM);
      end
 
      cygnss.(component).normal.(faceName) = normal;
