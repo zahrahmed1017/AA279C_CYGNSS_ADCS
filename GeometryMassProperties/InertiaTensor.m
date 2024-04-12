@@ -51,10 +51,12 @@ v_tot = v_sp + v_bus + v_sen;
 
 m_tot = 27.96; %kg
 m_sp  = m_tot * (v_sp / v_tot);
+% m_sp  = 8;
 m_bus = m_tot * (v_bus / v_tot);
 m_rec = m_tot * (v_rec / v_tot);
 m_tri = m_tot * (v_tri / v_tot);
 m_sen = m_tot * (v_sen / v_tot);
+% m_sen = 10;
 
 % Sanity check 
 m_tot_check = m_bus + m_sp + m_sen;
@@ -117,6 +119,10 @@ I_sen_b = ParallelAxisTheorem(I_sen, T_sen_b, m_sen);
 
 I      = I_sp_b + I_sen_b + I_bus_b;
 I_lbin = I .* 3410; % to compare with CAD
+
+%% Calculate Principal Axis:
+
+[vectors, values] = eig(I);
 
 
 
