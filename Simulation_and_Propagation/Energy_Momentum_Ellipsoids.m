@@ -9,7 +9,9 @@ save_plots = true;
 
 % w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % Hyperbola in XZ frame
 % w_init = [ 0, deg2rad(5), deg2rad(5)]'; % ellipse in XY plane
- w_init = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % ellipse in YZ plane
+% w_init = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % ellipse in YZ plane
+w_init = [ deg2rad(5), 0, 0]'; % constant w vector -> overlap is a point
+
 
 M = [0,0,0];
 
@@ -36,7 +38,6 @@ c_m = L / I_p(3,3);
 
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 [t, w_prop] = ode113(@(t,w) PropagateAttitude(w, M, I_p), tspan, w_init, options);
-
 
 %% Plot
 
