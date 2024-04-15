@@ -3,6 +3,8 @@ close all, clc, clear
 
 load("InertiaData.mat")
 
+save_plots = true;
+
 %% Initial Conditions
 
 % w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % PA frame
@@ -36,23 +38,22 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 %% Plot
 
-figure
+ell_fig = figure;
 hold on
 
 % energy ellipsoid
 [X_e, Y_e, Z_e] = ellipsoid(0,0,0, a_e, b_e, c_e, 75);
-surf(X_e, Y_e, Z_e, 'FaceColor', 'b', 'FaceAlpha', 0.5)
+surf(X_e, Y_e, Z_e, 'FaceColor', 'b', 'FaceAlpha', 0.5, 'EdgeColor', 'b')
 
 % momentum ellipsoid
 [X_m, Y_m, Z_m] = ellipsoid(0,0,0, a_m, b_m, c_m, 75);
-surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5)
+surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5, 'EdgeColor', 'r')
 
 % w trajectory
 plot3(w_prop(:,1), w_prop(:,2), w_prop(:,3), 'cyan', 'LineWidth', 2)
 plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 20, 'Color', 'magenta', 'LineStyle', 'none')
 
-legend("Energy Ellipsoid", "Momentum Ellipsoid", '\omega Trajectory', 'Initial \omega')
-
+legend("Energy Ellipsoid", "Momentum Ellipsoid", '\omega Trajectory', 'Initial \omega', 'Location', 'best')
 
 axis equal
 xlabel("\omega_x")
@@ -63,13 +64,27 @@ zlabel("\omega_z")
 max_wx = max([a_e, a_m]);
 max_wy = max([b_e, b_m]);
 max_wz = max([c_e, c_m]);
+factor = 2; % padding to allow room for legend, etc
 
-xlim([-max_wx*1.1, max_wx*1.1])
-ylim([-max_wy*1.1, max_wy*1.1])
-zlim([-max_wz*1.1, max_wz*1.1])
+xlim([-max_wx*factor, max_wx*factor])
+ylim([-max_wy*factor, max_wy*factor])
+zlim([-max_wz*factor, max_wz*factor])
+
+if save_plots
+    view(0,90) % XY plane
+    saveas(ell_fig, "Figures_and_Plots/ellipsoids_XY.png")
+
+    view(0,0) % XZ plane
+    saveas(ell_fig, "Figures_and_Plots/ellipsoids_XZ.png")
+
+    view(90,0) % YZ plane
+    saveas(ell_fig, "Figures_and_Plots/ellipsoids_YZ.png")
+
+end
+
 
 %% Plot angular rates
-figure
+rate_fig = figure;
 
 subplot(3, 1, 1)
 plot(t, rad2deg(w_prop(:,1)))
@@ -85,4 +100,6 @@ ylabel("\omega_z, ^\circ/s")
 xlabel("Time, s")
 
 sgtitle("Torque-free Angular Rates")
+
+saveas(rate_fig, "Figures_and_Plots/AngularRates.png")
 
