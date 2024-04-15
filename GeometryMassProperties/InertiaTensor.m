@@ -124,7 +124,13 @@ I_lbin = I .* 3410; % to compare with CAD
 
 [vectors, values] = eig(I);
 
+R_b_p = vectors'; % rotation from body frame to principal frame
+I_p = values; % Inertia tensor in PA frame
+I_b = I; % Inertia tensor in body frame
 
+%% Save matrices
+
+save( "InertiaData.mat", "I_b", "I_p", "R_b_p")
 
 
 
