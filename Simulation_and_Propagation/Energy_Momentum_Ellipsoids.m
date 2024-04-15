@@ -5,7 +5,9 @@ load("InertiaData.mat")
 
 %% Initial Conditions
 
-w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % PA frame
+% w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % PA frame
+w_init = [ 0, deg2rad(5), deg2rad(5)]'; % PA frame
+
 M = [0,0,0];
 
 %% Energy Ellipsoid
@@ -25,6 +27,12 @@ a_m = L / I_p(1,1);
 b_m = L / I_p(2,2);
 c_m = L / I_p(3,3);
 
+%% Get w trajectory
+
+tspan = [0 60*5]; % seconds
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+[t, w_prop] = ode113(@(t,w) PropagateAttitude(w, M, I_p), tspan, w_init, options);
+
 
 %% Plot
 
@@ -39,7 +47,42 @@ surf(X_e, Y_e, Z_e, 'FaceColor', 'b', 'FaceAlpha', 0.5)
 [X_m, Y_m, Z_m] = ellipsoid(0,0,0, a_m, b_m, c_m, 75);
 surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5)
 
+% w trajectory
+plot3(w_prop(:,1), w_prop(:,2), w_prop(:,3), 'cyan', 'LineWidth', 2)
+plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 4, 'Color', 'black')
+
+legend("Energy Ellipsoid", "Momentum Ellipsoid", 'Initial \omega', '\omega Trajectory')
+
+
 axis equal
-ylim([-.2,.2])
-xlim([-.2,.2])
-zlim([-.2,.2])
+xlabel("\omega_x")
+ylabel("\omega_y")
+zlabel("\omega_z")
+
+% set axes to encompass whole ellipsoid(s)
+max_wx = max([a_e, a_m]);
+max_wy = max([b_e, b_m]);
+max_wz = max([c_e, c_m]);
+
+xlim([-max_wx*1.1, max_wx*1.1])
+ylim([-max_wy*1.1, max_wy*1.1])
+zlim([-max_wz*1.1, max_wz*1.1])
+
+%% Plot angular rates
+figure
+
+subplot(3, 1, 1)
+plot(t, rad2deg(w_prop(:,1)))
+ylabel("\omega_x, ^\circ/s")
+
+subplot(3, 1, 2)
+plot(t, rad2deg(w_prop(:,2)))
+ylabel("\omega_y, ^\circ/s")
+
+subplot(3, 1, 3)
+plot(t, rad2deg(w_prop(:,3)))
+ylabel("\omega_z, ^\circ/s")
+xlabel("Time, s")
+
+sgtitle("Torque-free Angular Rates")
+
