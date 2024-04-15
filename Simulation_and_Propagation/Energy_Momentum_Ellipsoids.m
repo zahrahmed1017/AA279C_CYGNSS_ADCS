@@ -49,9 +49,9 @@ surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5)
 
 % w trajectory
 plot3(w_prop(:,1), w_prop(:,2), w_prop(:,3), 'cyan', 'LineWidth', 2)
-plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 4, 'Color', 'black')
+plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 20, 'Color', 'magenta', 'LineStyle', 'none')
 
-legend("Energy Ellipsoid", "Momentum Ellipsoid", 'Initial \omega', '\omega Trajectory')
+legend("Energy Ellipsoid", "Momentum Ellipsoid", '\omega Trajectory', 'Initial \omega')
 
 
 axis equal
