@@ -7,10 +7,13 @@ save_plots = true;
 
 %% Initial Conditions
 
-% w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % PA frame
-w_init = [ 0, deg2rad(5), deg2rad(5)]'; % PA frame
+% w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % Hyperbola in XZ frame
+% w_init = [ 0, deg2rad(5), deg2rad(5)]'; % ellipse in XY plane
+ w_init = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % ellipse in YZ plane
 
 M = [0,0,0];
+
+tspan = [0 180*5]; % seconds
 
 %% Energy Ellipsoid
 
@@ -31,7 +34,6 @@ c_m = L / I_p(3,3);
 
 %% Get w trajectory
 
-tspan = [0 60*5]; % seconds
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 [t, w_prop] = ode113(@(t,w) PropagateAttitude(w, M, I_p), tspan, w_init, options);
 
@@ -43,15 +45,15 @@ hold on
 
 % energy ellipsoid
 [X_e, Y_e, Z_e] = ellipsoid(0,0,0, a_e, b_e, c_e, 75);
-surf(X_e, Y_e, Z_e, 'FaceColor', 'b', 'FaceAlpha', 0.5, 'EdgeColor', 'b')
+surf(X_e, Y_e, Z_e, 'FaceColor', 'b', 'FaceAlpha', 0.5, 'EdgeColor', 'b', 'EdgeAlpha', '0.75')
 
 % momentum ellipsoid
 [X_m, Y_m, Z_m] = ellipsoid(0,0,0, a_m, b_m, c_m, 75);
-surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5, 'EdgeColor', 'r')
+surf(X_m, Y_m, Z_m, 'FaceColor', 'r', 'FaceAlpha', 0.5, 'EdgeColor', 'r', 'EdgeAlpha', '0.75')
 
 % w trajectory
 plot3(w_prop(:,1), w_prop(:,2), w_prop(:,3), 'cyan', 'LineWidth', 2)
-plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 20, 'Color', 'magenta', 'LineStyle', 'none')
+plot3(w_prop(1,1), w_prop(1,2), w_prop(1,3), 'Marker', '.', 'MarkerSize', 20, 'Color', 'green', 'LineStyle', 'none')
 
 legend("Energy Ellipsoid", "Momentum Ellipsoid", '\omega Trajectory', 'Initial \omega', 'Location', 'best')
 
