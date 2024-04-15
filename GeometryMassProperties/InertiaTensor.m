@@ -50,13 +50,20 @@ v_sen = sensor_l * sensor_w * sensor_h;
 v_tot = v_sp + v_bus + v_sen;
 
 m_tot = 27.96; %kg
-m_sp  = m_tot * (v_sp / v_tot);
-% m_sp  = 8;
-m_bus = m_tot * (v_bus / v_tot);
-m_rec = m_tot * (v_rec / v_tot);
-m_tri = m_tot * (v_tri / v_tot);
-m_sen = m_tot * (v_sen / v_tot);
-% m_sen = 10;
+% m_sp  = m_tot * (v_sp / v_tot);
+% m_bus = m_tot * (v_bus / v_tot);
+% m_rec = m_tot * (v_rec / v_tot);
+% m_tri = m_tot * (v_tri / v_tot);
+% m_sen = m_tot * (v_sen / v_tot);
+
+% If want to assign masses to components instead to make inertia tensor
+% more off diagonal
+m_sen = 5;
+m_tot_new = m_tot - m_sen;
+m_sp  = m_tot_new * (v_sp / v_tot);
+m_bus = m_tot_new * (v_bus / v_tot);
+m_rec = m_tot_new * (v_rec / v_tot);
+m_tri = m_tot_new * (v_tri / v_tot);
 
 % Sanity check 
 m_tot_check = m_bus + m_sp + m_sen;
@@ -124,13 +131,13 @@ I_lbin = I .* 3410; % to compare with CAD
 
 [vectors, values] = eig(I);
 
-R_b_p = vectors'; % rotation from body frame to principal frame
+R_b_p = vectors; % rotation from body frame to principal frame
 I_p = values; % Inertia tensor in PA frame
 I_b = I; % Inertia tensor in body frame
 
 %% Save matrices
 
-save( "InertiaData.mat", "I_b", "I_p", "R_b_p")
+save( "GeometryMassProperties/InertiaData.mat", "I_b", "I_p", "R_b_p")
 
 
 
