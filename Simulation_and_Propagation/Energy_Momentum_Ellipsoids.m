@@ -4,13 +4,14 @@ close all, clc, clear
 load("InertiaData.mat")
 
 save_plots = true;
+fig_num = 1; % use this when generating plots for many w cases
 
 %% Initial Conditions
 
 % w_init = [ 0, deg2rad(5), deg2rad(0.0001)]'; % Hyperbola in XZ frame
 % w_init = [ 0, deg2rad(5), deg2rad(5)]'; % ellipse in XY plane
-% w_init = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % ellipse in YZ plane
-w_init = [ deg2rad(5), 0, 0]'; % constant w vector -> overlap is a point
+w_init = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % ellipse in YZ plane
+% w_init = [ deg2rad(5), 0, 0]'; % constant w vector -> overlap is a point
 
 
 M = [0,0,0];
@@ -43,6 +44,7 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 ell_fig = figure;
 hold on
+grid on
 
 % energy ellipsoid
 [X_e, Y_e, Z_e] = ellipsoid(0,0,0, a_e, b_e, c_e, 75);
@@ -74,14 +76,17 @@ ylim([-max_wy*factor, max_wy*factor])
 zlim([-max_wz*factor, max_wz*factor])
 
 if save_plots
+    view(45,30)
+    saveas(ell_fig, sprintf("Figures_and_Plots/ellipsoids_3D_%i.png",fig_num))
+
     view(0,90) % XY plane
-    saveas(ell_fig, "Figures_and_Plots/ellipsoids_XY.png")
+    saveas(ell_fig, sprintf("Figures_and_Plots/ellipsoids_XY_%i.png",fig_num))
 
     view(0,0) % XZ plane
-    saveas(ell_fig, "Figures_and_Plots/ellipsoids_XZ.png")
+    saveas(ell_fig, sprintf("Figures_and_Plots/ellipsoids_XZ_%i.png",fig_num))
 
     view(90,0) % YZ plane
-    saveas(ell_fig, "Figures_and_Plots/ellipsoids_YZ.png")
+    saveas(ell_fig, sprintf("Figures_and_Plots/ellipsoids_YZ_%i.png",fig_num))
 
 end
 
@@ -104,5 +109,7 @@ xlabel("Time, s")
 
 sgtitle("Torque-free Angular Rates")
 
-saveas(rate_fig, "Figures_and_Plots/AngularRates.png")
+if save_plots
+    saveas(rate_fig, "Figures_and_Plots/AngularRates.png")
+end
 
