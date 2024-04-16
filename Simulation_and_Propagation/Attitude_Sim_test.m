@@ -48,6 +48,7 @@ subplot(2,1,2)
 plot(t, rad2deg(w_xy))
 ylabel("\omega_{xy}")
 ylim([min(rad2deg(w_xy)) - 1, min(rad2deg(w_xy)) + 1 ])
+xlabel("Time, s")
 
 sgtitle("\omega_z and \omega_{xy} Magnitudes")
 saveas(gcf, "Figures_and_Plots/AttitudeTest_CylRateMags.png")

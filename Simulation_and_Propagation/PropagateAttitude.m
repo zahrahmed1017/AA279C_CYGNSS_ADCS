@@ -6,23 +6,23 @@ function w_dot = PropagateAttitude(w, M_vec, I_p)
 % kg*m^2
 
 % w_dot -> rate of change of angular velocities in PA frame
-
-wx = w(1);
-wy = w(2);
-wz = w(3);
-Ix = I_p(1,1);
-Iy = I_p(2,2);
-Iz = I_p(3,3);
-Mx = M_vec(1);
-My = M_vec(2);
-Mz = M_vec(3);
-
-wx_d = (Mx - (Iz - Iy)*wz*wy)/Ix;
-wy_d = (My - (Ix - Iz)*wx*wz)/Iy;
-wz_d = (Mz - (Iy - Ix)*wy*wx)/Iz;
-
-
-w_dot = [wx_d, wy_d, wz_d]';
+    
+    wx = w(1);
+    wy = w(2);
+    wz = w(3);
+    Ix = I_p(1,1);
+    Iy = I_p(2,2);
+    Iz = I_p(3,3);
+    Mx = M_vec(1);
+    My = M_vec(2);
+    Mz = M_vec(3);
+    
+    wx_d = (Mx - (Iz - Iy)*wz*wy)/Ix;
+    wy_d = (My - (Ix - Iz)*wx*wz)/Iy;
+    wz_d = (Mz - (Iy - Ix)*wy*wx)/Iz;
+    
+    
+    w_dot = [wx_d, wy_d, wz_d]';
 
 
 end
