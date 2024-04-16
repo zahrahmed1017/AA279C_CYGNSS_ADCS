@@ -3,7 +3,7 @@ function cygnss = CYGNSS_Geometry()
 
     %{ 
     cygnss_geom_struct: 
-    - dimensions
+    - dimensions (wrt their respective frames)
         - sp
             - l, w, h
         - bus
@@ -11,7 +11,7 @@ function cygnss = CYGNSS_Geometry()
             height (sh), width (w)
         - sensor
             - l, w, h
-    - CM
+    - CM (wrt sp frame)
     - sp
         - origin (locations of the origins for the following frames/CM wrt solar
                panel frame)
@@ -19,9 +19,9 @@ function cygnss = CYGNSS_Geometry()
             - top, bottom_left, bottom_right
         - surface_area
             - top, bottom_left, bottom_right
-        - norm_vec
+        - norm_vec 
             - top, bottom_left, bottom_right
-        - barycenter (wrt sp frame)
+        - barycenter (wrt CM)
             - top, bottom_left, bottom_right
     - bus
         - origin (locations of the origins for the following frames/CM wrt solar
@@ -32,7 +32,7 @@ function cygnss = CYGNSS_Geometry()
             - bottom, front, back, left1, left2, right1, right2
         - norm_vec
             - bottom, front, back, left1, left2, right1, right2
-        - barycenter (wrt bus frame)
+        - barycenter (wrt CM)
             - bottom, front, back, left1, left2, right1, right2
     - sensor
         - origin (locations of the origins for the following frames/CM wrt solar
@@ -43,7 +43,7 @@ function cygnss = CYGNSS_Geometry()
             - bottom
         - norm_vec
             - bottom
-        - barycenter (wrt bus frame)
+        - barycenter (wrt CM)
             - bottom
                  
     %}
@@ -52,7 +52,9 @@ function cygnss = CYGNSS_Geometry()
     cygnss = struct();
 
     %%%%%%%%%% CM Vector - defined from solar panel frame %%%%%%%%%%%%%%%%%%%%%
-    cygnss.CM = [6.759294029290275e-04,0,0.101246714232069];
+    load('InertiaData.mat','CM')
+    % cygnss.CM = [6.759294029290275e-04,0,0.101246714232069];
+    cygnss.CM = CM;
     
     %%%%%%%%%% Dimensions:%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % length = along y axis
@@ -140,14 +142,14 @@ function cygnss = CYGNSS_Geometry()
                                -bus_w/2, -bus_bl/2, bus_fh/2;...
                                 bus_w/2, -bus_bl/2, bus_fh/2];
     
-    cygnss.bus.origin = [0, 0, sp_h + bus_fh/2];
+    cygnss.bus.origin = [0, 0, sp_h + bus_fh/2]; % wrt sp frame
     
     % Sensor: Coordinate given in sensor frame
     cygnss.sensor.coord.bottom = [ sen_w/2,  sen_l/2, sen_h/2;...
                                   -sen_w/2,  sen_l/2, sen_h/2;...
                                   -sen_w/2, -sen_l/2, sen_h/2;...
                                    sen_w/2, -sen_l/2, sen_h/2];
-    cygnss.sensor.origin = [sp_w/2 - sen_w/2, 0, sp_h + bus_fh + sen_h/2];
+    cygnss.sensor.origin = [sp_w/2 - sen_w/2, 0, sp_h + bus_fh + sen_h/2]; % wrt sp frame
 
 
     %%%%%%%%%%%%% Surface Normal, Barycenter, and Area %%%%%%%%%%%%%%%%%%%%

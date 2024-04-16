@@ -70,11 +70,18 @@ m_tot_check = m_bus + m_sp + m_sen;
 
 %% Calculate Center of Mass Coordinates:
 
-zCM = ((v_sp * sp_h/2) +...
-       (v_rec * (sp_h + busRec_h/2)) + ...
-       (v_sen * (sp_h + busRec_h + sensor_h/2)) - ...
-       (2 * v_tri * (sp_h + busRec_side1 + (2/3 * busTri_h)))) / v_tot;
-xCM = (v_sen * (busTri_w/2 - (sensor_w/2))) / v_tot;
+% zCM = ((v_sp * sp_h/2) +...
+%        (v_rec * (sp_h + busRec_h/2)) + ...
+%        (v_sen * (sp_h + busRec_h + sensor_h/2)) - ...
+%        (2 * v_tri * (sp_h + busRec_side1 + (2/3 * busTri_h)))) / v_tot;
+% xCM = (v_sen * (busTri_w/2 - (sensor_w/2))) / v_tot;
+% yCM = 0;
+
+zCM = ((m_sp * sp_h/2) +...
+       (m_rec * (sp_h + busRec_h/2)) + ...
+       (m_sen * (sp_h + busRec_h + sensor_h/2)) - ...
+       (2 * m_tri * (sp_h + busRec_side1 + (2/3 * busTri_h)))) / m_tot;
+xCM = (m_sen * (busTri_w/2 - (sensor_w/2))) / m_tot;
 yCM = 0;
 
 CM = [xCM, yCM, zCM]; % This is defined wrt the solar panel frame
@@ -137,7 +144,9 @@ I_b = I; % Inertia tensor in body frame
 
 %% Save matrices
 
-save( "GeometryMassProperties/InertiaData.mat", "I_b", "I_p", "R_b_p")
+save( "GeometryMassProperties/InertiaData.mat", "I_b", "I_p", "R_b_p", "CM")
 
+%% Rerun CYGNSS_Geometry 
 
-
+cygnss = CYGNSS_Geometry();
+save("GeometryMassProperties/cygnss.mat", "cygnss")
