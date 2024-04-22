@@ -38,7 +38,7 @@ c_m = L / I_p(3,3);
 %% Get w trajectory
 
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-[t, w_prop] = ode113(@(t,w) PropagateAttitude(w, M, I_p), tspan, w_init, options);
+[t, w_prop] = ode113(@(t,w) PropagateEuler(w, M, I_p), tspan, w_init, options);
 
 
 %% Plot energy and momentum ellipsoids individually for the mems

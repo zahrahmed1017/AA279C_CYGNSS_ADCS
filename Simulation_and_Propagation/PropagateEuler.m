@@ -1,4 +1,4 @@
-function w_dot = PropagateAttitude(w, M_vec, I_p)
+function w_dot = PropagateEuler(w, M_vec, I_p)
 % w -> initial angular velocity in PA frame. Units: rad/s
 % M_vec -> vector of constant torque values in PA frame. Set to [0, 0, 0]
 % for toque-free motion. Units: N-m

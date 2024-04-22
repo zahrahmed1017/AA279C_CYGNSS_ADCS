@@ -9,7 +9,7 @@ M = [0,0,0];
 
 tspan = [0 120*5]; % seconds
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-[t, w_prop] = ode113(@(t,w) PropagateAttitude(w, M, I_p), tspan, w_init, options);
+[t, w_prop] = ode113(@(t,w) PropagateEuler(w, M, I_p), tspan, w_init, options);
 
 % plot
 figure
