@@ -1,9 +1,11 @@
 function q_dot = QuaternionKinematics(q, w)
 
-q1 = q(1);
-q2 = q(2);
-q3 = q(3);
-q4 = q(4); % SCALAR
+q_norm = q ./ (norm(q));
+
+q1 = q_norm(1);
+q2 = q_norm(2);
+q3 = q_norm(3);
+q4 = q_norm(4); % SCALAR
 
 % Skew symmetric matrix
 wx = w(1);
