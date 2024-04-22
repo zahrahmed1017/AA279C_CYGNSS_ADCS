@@ -1,4 +1,4 @@
-function ang_w_d = PropagateAttitude_Quat(ang_w, M_vec, I_p)
+function ang_w_d = PropagateAttitude_EulerAng(ang_w, M_vec, I_p)
 
 % ang_w --> [phi theta psi w1 w2 w3]
 % euler angles correspond to 3-1-3 sequence, in radians
