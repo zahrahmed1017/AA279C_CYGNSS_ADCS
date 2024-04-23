@@ -11,7 +11,8 @@ close all; clear;
 load("InertiaData.mat")
 
 %% Initial conditions
-w_0 = [0.001, 0, 5]'; % rad/s
+% w_0 = [0.001, 0, deg2rad(5)]'; % rad/s
+w_0 = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % rad/s
 M_vec = [0, 0, 0]';
 
 % initial minute rotation p = 0.001 rad about z axis (to avoid singularity)
@@ -37,10 +38,12 @@ qw_0 = [q_0; w_0];
 
 figure 
 hold on
-plot(t_q, qw_prop(1))
-plot(t_q, qw_prop(2))
-plot(t_q, qw_prop(3))
-% legend("q_1", "q_2", "q_3", "q_4")
+plot(t_q, qw_prop(:,1))
+plot(t_q, qw_prop(:,2))
+plot(t_q, qw_prop(:,3))
+plot(t_q, qw_prop(:,4))
+plot(t_q, sqrt(qw_prop(:,1).^2 + qw_prop(:,2).^2 + qw_prop(:,3).^2 + qw_prop(:,4).^2))
+legend("q_1", "q_2", "q_3", "q_4", "q_{mag}")
 title("Propagated quaternions")
 
 % check that the two sequences match
