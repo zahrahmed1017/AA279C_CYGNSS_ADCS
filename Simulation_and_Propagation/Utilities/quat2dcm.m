@@ -6,6 +6,6 @@ q = quat(1:3);
 
 qx = crossMatrix(q);
 
-A = (q4^2 - q.^2)*eye(3) + 2*q*q' - 2*q4*qx;
+A = (q4^2 - q' * q)*eye(3) + 2*q*q' - 2*q4*qx;
 
 end

@@ -16,8 +16,8 @@ w_0 = [ deg2rad(5), deg2rad(0.5), deg2rad(1.5)]'; % rad/s
 M_vec = [0, 0, 0]';
 
 % initial minute rotation p = 0.001 rad about z axis (to avoid singularity)
-e = [0;0;1];
-p = 0.001;
+e = [1;1;1] / sqrt(3);
+p = 0.5;
 q_0 = [e(1)*sin(p/2);
        e(2)*sin(p/2);
        e(3)*sin(p/2);
@@ -25,6 +25,10 @@ q_0 = [e(1)*sin(p/2);
 
 % TODO write a function for this
 % ang_0 = quat2eul([q_0(4); q_0(1:3)]', 'ZXZ'); % matlab quaternion convention puts scalar first
+ang_0 = dcm2eulerAng(quat2dcm(q_0));
+
+% for sanity check: does it convert back the same?
+q_test = dcm2quat(eulerAng2dcm(ang_0));
 
 t_span = [0, 10*60];
 
@@ -48,4 +52,11 @@ title("Propagated quaternions")
 
 % check that the two sequences match
 
+%% Propagate the Euler angles
+
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+
+ang_w_0 = [ang_0; w_0];
+
+[t_q, ang_w_prop] = ode113(@(t,ang_w) PropagateAttitude_EulerAng(ang_w, M_vec, I_p), t_span, ang_w_0, options);
 

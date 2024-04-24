@@ -13,6 +13,7 @@ wx = w(1);
 wy = w(2);
 wz = w(3);
 
+
 % kinematics euqaiotns from slides
 phi_d = (wx * sin(psi) + wy * cos(psi)) / sin(theta);
 theta_d = wx * cos(psi) - wy * sin(psi);
