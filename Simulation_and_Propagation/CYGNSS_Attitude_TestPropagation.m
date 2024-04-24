@@ -44,10 +44,10 @@ qw_0 = [q_0; w_0];
 
 figure 
 hold on
-plot(t_q, qw_prop(:,1))
-plot(t_q, qw_prop(:,2))
-plot(t_q, qw_prop(:,3))
-plot(t_q, qw_prop(:,4))
+plot(t_q, qw_prop(:,1), 'LineWidth',2)
+plot(t_q, qw_prop(:,2), 'LineWidth', 2)
+plot(t_q, qw_prop(:,3), 'LineWidth', 2)
+plot(t_q, qw_prop(:,4), 'LineWidth', 2)
 grid on;
 plot(t_q, sqrt(qw_prop(:,1).^2 + qw_prop(:,2).^2 + qw_prop(:,3).^2 + qw_prop(:,4).^2), 'LineWidth', 2)
 legend("q_1", "q_2", "q_3", "q_4", "q_{mag}")
@@ -69,7 +69,11 @@ hold on;
 plot(t_q, eulerAngs(:,1),'LineWidth', 2);
 plot(t_q, eulerAngs(:,2), 'LineWidth', 2);
 plot(t_q, eulerAngs(:,3), 'LineWidth', 2);
+legend('\phi', '\theta', '\psi')
+title('Quaternion Propagation shown as Euler Angles')
 grid on; 
+
+save("Simulation_and_Propagation/PropAttitude_Quat_Data.mat", 't_q', 'qw_prop', 'eulerAngs')
 
 
 %% Propagate the Euler angles
@@ -78,13 +82,38 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 ang_w_0 = [ang_0; w_0];
 
-[t_q, ang_w_prop] = ode113(@(t,ang_w) PropagateAttitude_EulerAng(ang_w, M_vec, I_p), t_span, ang_w_0, options);
+[t_ang, ang_w_prop] = ode113(@(t,ang_w) PropagateAttitude_EulerAng(ang_w, M_vec, I_p), t_span, ang_w_0, options);
 
 figure()
 hold on;
-plot(t_q, ang_w_prop(:,1),'LineWidth', 2);
-plot(t_q, ang_w_prop(:,2), 'LineWidth', 2);
-plot(t_q, ang_w_prop(:,3), 'LineWidth', 2);
+plot(t_ang, ang_w_prop(:,1),'LineWidth', 2);
+plot(t_ang, ang_w_prop(:,2), 'LineWidth', 2);
+plot(t_ang, ang_w_prop(:,3), 'LineWidth', 2);
+grid on; 
+
+%% Propagate the DCM:
+
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+
+dcm_w_0 = [dcm_0(:,1); dcm_0(:,2); dcm_0(:,3); w_0];
+
+[t_dcm, dcm_w_prop] = ode113(@(t,dcm_w) PropagateAttitude_DCM(dcm_w, M_vec, I_p), t_span, dcm_w_0, options);
+
+eulerAngs_dcm = zeros(length(dcm_w_prop), 3);
+for i = 1:length(eulerAngs_dcm)
+    dcm_vec = dcm_w_prop(i,1:9)';
+    dcm = [dcm_vec(1:3), dcm_vec(4:6), dcm_vec(7:9)]; 
+    [phi, theta, psi] = dcm2angle(dcm,'ZXZ','Robust');
+    eulerAngs_dcm(i,:) = [phi, theta, psi];
+end
+
+figure()
+hold on;
+plot(t_q, eulerAngs_dcm(:,1),'LineWidth', 2);
+plot(t_q, eulerAngs_dcm(:,2), 'LineWidth', 2);
+plot(t_q, eulerAngs_dcm(:,3), 'LineWidth', 2);
+legend('\phi', '\theta', '\psi')
+title('DCM Propagation shown as Euler Angles')
 grid on; 
 
 %% Checking Utility functions for converting attitude representations:

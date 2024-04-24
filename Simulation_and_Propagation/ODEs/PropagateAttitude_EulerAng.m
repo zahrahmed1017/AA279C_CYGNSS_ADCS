@@ -11,8 +11,9 @@ w    = ang_w(4:6);
 % else
 %     angs_d = EulerAngKinematics(angs,w);
 % end
+
 angs_d = EulerAngKinematics(angs,w);
-w_d = PropagateEuler(w, M_vec, I_p);
+w_d    = PropagateEuler(w, M_vec, I_p);
 
 ang_w_d = [angs_d; w_d];
 
