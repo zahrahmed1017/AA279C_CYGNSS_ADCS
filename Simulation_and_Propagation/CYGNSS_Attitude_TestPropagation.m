@@ -109,9 +109,9 @@ end
 
 figure()
 hold on;
-plot(t_q, eulerAngs_dcm(:,1),'LineWidth', 2);
-plot(t_q, eulerAngs_dcm(:,2), 'LineWidth', 2);
-plot(t_q, eulerAngs_dcm(:,3), 'LineWidth', 2);
+plot(t_dcm, eulerAngs_dcm(:,1),'LineWidth', 2);
+plot(t_dcm, eulerAngs_dcm(:,2), 'LineWidth', 2);
+plot(t_dcm, eulerAngs_dcm(:,3), 'LineWidth', 2);
 legend('\phi', '\theta', '\psi')
 title('DCM Propagation shown as Euler Angles')
 grid on; 
