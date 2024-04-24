@@ -15,8 +15,8 @@ wz = w(3);
 
 % kinematics equations from slides
 phi_d = (wx * sin(psi) + wy * cos(psi)) / sin(theta);
-theta_d = wx * cos(psi) - wy * sin(psi);
-psi_d = wz - (wx * sin(psi) + wy * cos(psi)) / cot(theta);
+theta_d = (wx * cos(psi)) - (wy * sin(psi));
+psi_d = wz - ((wx * sin(psi) + wy * cos(psi)) * cot(theta));
 
 angs_d = [phi_d; theta_d; psi_d];
 
