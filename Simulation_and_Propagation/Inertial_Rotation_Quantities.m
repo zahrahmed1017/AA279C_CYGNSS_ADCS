@@ -48,3 +48,26 @@ hold on
 plot3(rad2deg(w_i_i(1,:)), rad2deg(w_i_i(2,:)), rad2deg(w_i_i(3,:)))
 view(3)
 quiver3( 0, 0, 0,  rad2deg(L_i_i(1,1)), rad2deg(L_i_i(2,2)),  rad2deg(L_i_i(3,3)))
+axis equal
+grid on
+
+
+%% Prove that herpelhode is in plane perpendicular to angular momentum
+
+test_vec = [];
+for j=1:10
+    ind1 = rand_index(n);
+    ind2 = rand_index(n);
+    plane_vec = w_i_i(:,ind2) - w_i_i(:,ind1); % this should exist in the plane perpendicular to L_i
+    test_dot = dot( plane_vec, L_i_i(:,1) );
+    test_vec = [test_vec, test_dot];
+end
+
+
+
+function ind = rand_index(n)
+% n -> number of entries in time series
+
+% want a number between 1 and n
+ind = round(1 + (n-1).*rand(1,1));
+end
