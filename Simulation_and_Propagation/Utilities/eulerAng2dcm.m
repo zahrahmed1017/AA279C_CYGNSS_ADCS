@@ -1,7 +1,7 @@
 function A = eulerAng2dcm(angs)
 % angs -> [phi, theta, psi] in radians for 3-1-3 rotation
 
-phi = angs(1);
+phi = angs(1); 
 theta = angs(2);
 psi = angs(3);
 
