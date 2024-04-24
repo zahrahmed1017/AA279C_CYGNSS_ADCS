@@ -41,3 +41,13 @@ rE = 6378;
 [xE,yE,zE] = ellipsoid(0,0,0,rE,rE,rE,20);
 surface(xE, yE , zE , 'FaceColor', 'blue', 'EdgeColor', 'black', 'FaceAlpha', 0.25);
 view (3);
+
+% Calculating the R-T-N unit vectors:
+R_unitvec = zeros(length(tout),3);
+T_unitvec = 
+N_unitvec
+
+for i = 1:length(tout)
+
+
+end
