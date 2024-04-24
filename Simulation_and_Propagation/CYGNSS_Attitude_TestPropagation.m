@@ -12,7 +12,7 @@ load("InertiaData.mat")
 
 %% Initial conditions
 % w_0 = [0.001, 0, deg2rad(5)]'; % rad/s
-w_0 = [ 0, 0, deg2rad(5)]'; % rad/s (pitch, roll, yaw)
+w_0 = [ 0, deg2rad(1.5), deg2rad(5)]'; % rad/s (pitch, roll, yaw)
 M_vec = [0, 0, 0]';
 
 % initial minute rotation p = 0.001 rad about z axis (to avoid singularity)
@@ -23,7 +23,8 @@ q_0 = [e(1)*sin(p/2);
        e(3)*sin(p/2);
        cos(p/2)];
 dcm_0 = quaternion2dcm(q_0);
-t_span = [0, 10*60];
+% t_span = [0, 10*60];
+t_span = 0:3:10*60;
 
 q_0_check = dcm2quaternion(dcm_0);
 
@@ -60,7 +61,7 @@ for i = 1:length(eulerAngs)
     % eul = dcm2eulerAng(dcm);
     % [phi, theta, psi] = dcm2angle(dcm,'ZXZ','Robust');
     quat = qw_prop(i,1:4);
-    [phi, theta, psi] = quat2angle(quat([4 1 2 3]));
+    [phi, theta, psi] = quat2angle(quat([4 1 2 3]), 'ZXZ');
     eulerAngs(i,:) = [phi, theta, psi];
 end
 
@@ -75,21 +76,6 @@ grid on;
 
 save("Simulation_and_Propagation/PropAttitude_Quat_Data.mat", 't_q', 'qw_prop', 'eulerAngs')
 
-
-%% Propagate the Euler angles
-
-options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-
-ang_w_0 = [ang_0; w_0];
-
-[t_ang, ang_w_prop] = ode113(@(t,ang_w) PropagateAttitude_EulerAng(ang_w, M_vec, I_p), t_span, ang_w_0, options);
-
-figure()
-hold on;
-plot(t_ang, ang_w_prop(:,1),'LineWidth', 2);
-plot(t_ang, ang_w_prop(:,2), 'LineWidth', 2);
-plot(t_ang, ang_w_prop(:,3), 'LineWidth', 2);
-grid on; 
 
 %% Propagate the DCM:
 
@@ -116,28 +102,64 @@ legend('\phi', '\theta', '\psi')
 title('DCM Propagation shown as Euler Angles')
 grid on; 
 
+%% Plot the difference between the quaternion and DCM propagation
+
+phi_diff   = eulerAngs_dcm(:,1) - eulerAngs(:,1);
+theta_diff = eulerAngs_dcm(:,2) - eulerAngs(:,2);
+psi_diff   = eulerAngs_dcm(:,3) - eulerAngs(:,3);
+
+figure()
+subplot(3,1,1)
+plot(t_q, phi_diff, 'LineWidth', 2)
+title('Phi Error')
+grid on;
+subplot(3,1,2)
+plot(t_q, theta_diff, 'LineWidth', 2)
+title('Theta Error')
+grid on;
+subplot(3,1,3)
+plot(t_q, psi_diff, 'LineWidth', 2)
+title('Psi Error')
+grid on;
+
+%% Propagate the Euler angles
+% 
+% options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+% 
+% ang_w_0 = [ang_0; w_0];
+% 
+% [t_ang, ang_w_prop] = ode113(@(t,ang_w) PropagateAttitude_EulerAng(ang_w, M_vec, I_p), t_span, ang_w_0, options);
+% 
+% figure()
+% hold on;
+% plot(t_ang, ang_w_prop(:,1),'LineWidth', 2);
+% plot(t_ang, ang_w_prop(:,2), 'LineWidth', 2);
+% plot(t_ang, ang_w_prop(:,3), 'LineWidth', 2);
+% grid on; 
+
+
 %% Checking Utility functions for converting attitude representations:
 
-% First checking the quaternion2dcm function:
-dcm_1 = quaternion2dcm(q_0);
-q1 = q_0(1);
-q2 = q_0(2);
-q3 = q_0(3);
-q4 = q_0(4);
-dcm_2 = [q4^2 + q1^2 - q2^2 - q3^2, 2*(q1*q2 + q3*q4), 2*(q1*q3 - q2*q4);...
-         2*(q1*q2 - q3*q4),          q4^2 - q1^2 + q2^2 - q3^2,  2*(q2*q3 + q1*q4);...
-         2*(q1*q3 + q2*q4),          2*(q2*q3 - q1*q4),          q4^2 + q1^2 - q2^2 - q3^2];
-
-
-
-% Second check the dcm2eulerAng function:
-angs1 = dcm2eulerAng(dcm_1); % Our function
-[phi, theta, psi] = dcm2angle(dcm_1, "ZXZ"); % MATLAB function
-
-% Third check the eulerAng2dcm:
-dcm_check  = eulerAng2dcm(angs1); % Our function
-dcm_check2 = angle2dcm(angs1(1),angs1(2),angs1(3),'ZXZ'); % MATLAB function
-
-% Fourth check dcm2quaternion:
-q_check1 = dcm2quaternion(dcm_check);
-q_check2 = dcm2quat(dcm_check);
+% % First checking the quaternion2dcm function:
+% dcm_1 = quaternion2dcm(q_0);
+% q1 = q_0(1);
+% q2 = q_0(2);
+% q3 = q_0(3);
+% q4 = q_0(4);
+% dcm_2 = [q4^2 + q1^2 - q2^2 - q3^2, 2*(q1*q2 + q3*q4), 2*(q1*q3 - q2*q4);...
+%          2*(q1*q2 - q3*q4),          q4^2 - q1^2 + q2^2 - q3^2,  2*(q2*q3 + q1*q4);...
+%          2*(q1*q3 + q2*q4),          2*(q2*q3 - q1*q4),          q4^2 + q1^2 - q2^2 - q3^2];
+% 
+% 
+% 
+% % Second check the dcm2eulerAng function:
+% angs1 = dcm2eulerAng(dcm_1); % Our function
+% [phi, theta, psi] = dcm2angle(dcm_1, "ZXZ"); % MATLAB function
+% 
+% % Third check the eulerAng2dcm:
+% dcm_check  = eulerAng2dcm(angs1); % Our function
+% dcm_check2 = angle2dcm(angs1(1),angs1(2),angs1(3),'ZXZ'); % MATLAB function
+% 
+% % Fourth check dcm2quaternion:
+% q_check1 = dcm2quaternion(dcm_check);
+% q_check2 = dcm2quat(dcm_check);

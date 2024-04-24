@@ -175,7 +175,6 @@ Z = [zPlane, zPlane, zPlane, zPlane];
 % Plot the plane
 fill3(X, Y, Z, 'c', 'FaceAlpha', 0.1); % 'c' is cyan, adjust transparency with 'FaceAlpha'
 
-
 subplot(1,2,2)
 plot3(Lx, Ly, Lz, 'LineWidth', 2)
 xlabel('L_x')
