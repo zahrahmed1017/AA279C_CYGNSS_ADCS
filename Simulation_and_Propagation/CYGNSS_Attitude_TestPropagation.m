@@ -25,6 +25,7 @@ q_0 = [e(1)*sin(p/2);
 dcm_0 = quaternion2dcm(q_0);
 % t_span = [0, 10*60];
 t_span = 0:3:10*60;
+% t_span = 0:10:2500;
 
 q_0_check = dcm2quaternion(dcm_0);
 

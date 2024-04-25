@@ -76,8 +76,6 @@ b_x_i = zeros(3,n);
 b_y_i = zeros(3,n);
 b_z_i = zeros(3,n);
 
-
-
 figure
 hold on
 view(3)
@@ -94,7 +92,7 @@ for i = 1:n
     q_i_pa = qw_prop(i,1:4)'; % attitude quaternion for this time step
     A_i_pa = quaternion2dcm(q_i_pa); % rotation from inertial frame to PA
     
-    % Prinicpal axes
+    % Principal axes
     % appears to be equivalent to grabbing each column of A_i_pa'
     % but keeping as-is to be extra certain
     pa_x_i(:,i) = A_i_pa' * [1;0;0]; 
@@ -117,7 +115,7 @@ for i = 1:n
 
 end
 
-save("Body_PA_in_Inertial.mat", "pa_x_i", "pa_y_i", "pa_z_i", "b_x_i", "b_y_i", "b_z_i")
+save("Data/Body_PA_in_Inertial.mat", "pa_x_i", "pa_y_i", "pa_z_i", "b_x_i", "b_y_i", "b_z_i")
 
 %% Helper functions
 
