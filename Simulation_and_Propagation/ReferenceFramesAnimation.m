@@ -47,7 +47,7 @@ for i = 1:length(tout)
     text(b_z_i(i,1), b_z_i(i,2), b_z_i(i,3)+offset, 'Z_p', 'FontSize', 14, 'color', 'black');
 
     plot3(0,0,0,'.','MarkerSize', 20)
-    % axis equal; 
+    axis equal; 
     xlim([-1 1])
     ylim([-1 1])
     zlim([-1 1])
@@ -121,7 +121,7 @@ for tsamp = 1:length(tsample)
     text(b_z_i(img,1), b_z_i(img,2), b_z_i(img,3)+offset, 'Z_p', 'FontSize', 14, 'color', 'black');
 
     plot3(0,0,0,'.','MarkerSize', 20)
-    % axis equal; 
+    axis equal; 
     xlim([-1 1])
     ylim([-1 1])
     zlim([-1 1])
