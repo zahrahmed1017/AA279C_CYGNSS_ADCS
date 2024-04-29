@@ -12,12 +12,14 @@ load("InertiaData.mat")
 
 %% Initial conditions
 % w_0 = [0.001, 0, deg2rad(5)]'; % rad/s
-w_0 = [ 0, deg2rad(1.5), deg2rad(5)]'; % rad/s (pitch, roll, yaw)
+% w_0 = [ 0, deg2rad(1.5), deg2rad(5)]'; % rad/s (pitch, roll, yaw)
+w_0 = [ 0, 0, deg2rad(5)]'; % rad/s (pitch, roll, yaw)
 M_vec = [0, 0, 0]';
 
 % initial minute rotation p = 0.001 rad about z axis (to avoid singularity)
 e = [1;1;1] / sqrt(3);
-p = 0.5;
+% p = 0.5;
+p = 0; % for PS4-Q1
 q_0 = [e(1)*sin(p/2);
        e(2)*sin(p/2);
        e(3)*sin(p/2);
@@ -54,6 +56,22 @@ grid on;
 plot(t_q, sqrt(qw_prop(:,1).^2 + qw_prop(:,2).^2 + qw_prop(:,3).^2 + qw_prop(:,4).^2), 'LineWidth', 2)
 legend("q_1", "q_2", "q_3", "q_4", "q_{mag}")
 title("Propagated quaternions")
+saveas(gcf, "Figures_and_Plots/quat_integration_results_q.png")
+
+
+% plot rates
+figure()
+hold on;
+plot(t_q, rad2deg(qw_prop(:,5)), 'LineWidth',2)
+plot(t_q, rad2deg(qw_prop(:,6)), 'LineWidth', 2)
+plot(t_q, rad2deg(qw_prop(:,7)), 'LineWidth', 2)
+legend('\omega_x', '\omega_y', '\omega_z')
+title('Angular rates in PA coordinates')
+grid on; 
+xlabel("Time, s")
+ylabel("Rate, ^\circ /s")
+ylim([-0.5, 5.5])
+saveas(gcf, "Figures_and_Plots/PS4/Q1a_ang_vel.png")
 
 % check that the two sequences match, convert quat to euler angles
 eulerAngs = zeros(length(qw_prop), 3);
@@ -66,6 +84,7 @@ for i = 1:length(eulerAngs)
     eulerAngs(i,:) = [phi, theta, psi];
 end
 
+% plot orientation as Euler angles
 figure()
 hold on;
 plot(t_q, eulerAngs(:,1),'LineWidth', 2);
@@ -74,8 +93,12 @@ plot(t_q, eulerAngs(:,3), 'LineWidth', 2);
 legend('\phi', '\theta', '\psi')
 title('Quaternion Propagation shown as Euler Angles')
 grid on; 
+% saveas(gcf, "Figures_and_Plots/quat_integration_results_EA.png")
+saveas(gcf, "Figures_and_Plots/PS4/Q1a_euler_angs.png"); % for PS4
 
 save("Simulation_and_Propagation/PropAttitude_Quat_Data.mat", 't_q', 'qw_prop', 'eulerAngs')
+
+
 
 
 %% Propagate the DCM:
@@ -102,6 +125,9 @@ plot(t_dcm, eulerAngs_dcm(:,3), 'LineWidth', 2);
 legend('\phi', '\theta', '\psi')
 title('DCM Propagation shown as Euler Angles')
 grid on; 
+saveas(gcf, "Figures_and_Plots/DCM_integration_results.png")
+
+
 
 %% Plot the difference between the quaternion and DCM propagation
 
@@ -122,6 +148,7 @@ subplot(3,1,3)
 plot(t_q, psi_diff, 'LineWidth', 2)
 title('Psi Error')
 grid on;
+saveas(gcf, "Figures_and_Plots/compare_quat_DCM.png")
 
 %% Propagate the Euler angles
 % 

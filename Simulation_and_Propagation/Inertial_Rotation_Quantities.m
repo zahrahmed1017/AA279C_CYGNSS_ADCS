@@ -41,6 +41,7 @@ xlabel("Time, s")
 ylabel("Magnitude, deg/s")
 legend("L_1", "L_2", "L_3")
 ylim([-3 9])
+saveas(gcf, "Figures_and_Plots/const_L_components.png")
 
 % Herpelhode trajectory in 3D
 figure
@@ -50,9 +51,11 @@ view(3)
 quiver3( 0, 0, 0,  rad2deg(L_i_i(1,1)), rad2deg(L_i_i(2,2)),  rad2deg(L_i_i(3,3)))
 axis equal
 grid on
-title("Herpelhode trajectory")
-legend("Angular momentum vector", "Herpelhode", "Location",'best')
-
+xlim([-2.5 2.5])
+ylim([-2.5 2.5])
+title("Herpolhode trajectory")
+legend("L_I", "Herpolhode", 'Location','east')
+saveas(gcf, 'Figures_and_Plots/Herpelhode.png')
 
 
 %% Prove that herpelhode is in plane perpendicular to angular momentum
@@ -67,55 +70,55 @@ for j=1:10
 end
 
 %% Plotting all frames over time
-
-pa_x_i = zeros(3,n);
-pa_y_i = zeros(3,n);
-pa_z_i = zeros(3,n);
-
-b_x_i = zeros(3,n);
-b_y_i = zeros(3,n);
-b_z_i = zeros(3,n);
-
-figure
-hold on
-view(3)
-axis equal
-grid on
-
-for i = 1:n
-
-    % plot inertial frame
-    plot_inertial_axes()
-    hold on
-
-    % get rotations
-    q_i_pa = qw_prop(i,1:4)'; % attitude quaternion for this time step
-    A_i_pa = quaternion2dcm(q_i_pa); % rotation from inertial frame to PA
-    
-    % Principal axes
-    % appears to be equivalent to grabbing each column of A_i_pa'
-    % but keeping as-is to be extra certain
-    pa_x_i(:,i) = A_i_pa' * [1;0;0]; 
-    pa_y_i(:,i) = A_i_pa' * [0;1;0]; 
-    pa_z_i(:,i) = A_i_pa' * [0;0;1]; 
-    plot3([0, pa_x_i(1,i)], [0, pa_x_i(2,i)], [0, pa_x_i(3,i)], 'r')
-    % plot3([0, pa_y_i(:,i)], 'r')
-    % plot3([0, pa_z_i(:,i)], 'r')
-
-    % Body axes
-    b_x_i(:,i) = A_i_pa' * R_b_p * [1;0;0]; 
-    b_y_i(:,i)  = A_i_pa' * R_b_p * [0;1;0]; 
-    b_z_i(:,i)  = A_i_pa' * R_b_p * [0;0;1]; 
-
-    % pause(1)
-
-    % TODO save the frame
-
-    hold off
-
-end
-
-save("Data/Body_PA_in_Inertial.mat", "pa_x_i", "pa_y_i", "pa_z_i", "b_x_i", "b_y_i", "b_z_i")
+% 
+% pa_x_i = zeros(3,n);
+% pa_y_i = zeros(3,n);
+% pa_z_i = zeros(3,n);
+% 
+% b_x_i = zeros(3,n);
+% b_y_i = zeros(3,n);
+% b_z_i = zeros(3,n);
+% 
+% figure
+% hold on
+% view(3)
+% axis equal
+% grid on
+% 
+% for i = 1:n
+% 
+%     % plot inertial frame
+%     plot_inertial_axes()
+%     hold on
+% 
+%     % get rotations
+%     q_i_pa = qw_prop(i,1:4)'; % attitude quaternion for this time step
+%     A_i_pa = quaternion2dcm(q_i_pa); % rotation from inertial frame to PA
+% 
+%     % Principal axes
+%     % appears to be equivalent to grabbing each column of A_i_pa'
+%     % but keeping as-is to be extra certain
+%     pa_x_i(:,i) = A_i_pa' * [1;0;0]; 
+%     pa_y_i(:,i) = A_i_pa' * [0;1;0]; 
+%     pa_z_i(:,i) = A_i_pa' * [0;0;1]; 
+%     % plot3([0, pa_x_i(1,i)], [0, pa_x_i(2,i)], [0, pa_x_i(3,i)], 'r')
+%     % plot3([0, pa_y_i(:,i)], 'r')
+%     % plot3([0, pa_z_i(:,i)], 'r')
+% 
+%     % Body axes
+%     b_x_i(:,i) = A_i_pa' * R_b_p * [1;0;0]; 
+%     b_y_i(:,i)  = A_i_pa' * R_b_p * [0;1;0]; 
+%     b_z_i(:,i)  = A_i_pa' * R_b_p * [0;0;1]; 
+% 
+%     % pause(1)
+% 
+%     % TODO save the frame
+% 
+%     hold off
+% 
+% end
+% 
+% save("Data/Body_PA_in_Inertial.mat", "pa_x_i", "pa_y_i", "pa_z_i", "b_x_i", "b_y_i", "b_z_i")
 
 %% Helper functions
 
