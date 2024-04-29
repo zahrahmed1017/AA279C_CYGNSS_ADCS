@@ -61,7 +61,7 @@ end
 
 movie(figHandle, frames, 1, 10);
 
-videoFile = VideoWriter("Figures_and_Plots/ReferenceFrames_animation.mp4",'MPEG-4');
+videoFile = VideoWriter("Figures_and_Plots/PS3/ReferenceFrames_animation.mp4",'MPEG-4');
 videoFile.FrameRate = 10;
 open(videoFile);
 writeVideo(videoFile, frames);
@@ -127,6 +127,6 @@ for tsamp = 1:length(tsample)
     zlim([-1 1])
     title(['Reference Frames at t = ', num2str(tout(img)), ' s'])
     figname = ['ReferenceFrames_', num2str(tout(img)), 's.png'];
-    saveas(gcf,['Figures_and_Plots/', figname])
+    saveas(gcf,['Figures_and_Plots/PS3', figname])
     hold off;
 end
