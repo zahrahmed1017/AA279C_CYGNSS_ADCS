@@ -96,7 +96,7 @@ grid on;
 % saveas(gcf, "Figures_and_Plots/quat_integration_results_EA.png")
 saveas(gcf, "Figures_and_Plots/PS4/Q1a_euler_angs.png"); % for PS4
 
-save("Simulation_and_Propagation/PropAttitude_Quat_Data.mat", 't_q', 'qw_prop', 'eulerAngs')
+save("Data/PropAttitude_Quat_Data.mat", 't_q', 'qw_prop', 'eulerAngs')
 
 
 
