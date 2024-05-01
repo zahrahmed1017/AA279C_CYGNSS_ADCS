@@ -1,4 +1,5 @@
-function A = quat2dcm(quat)
+function A = quaternion2dcm(quat)
+% DON'T USE THIS FUNCTION
 % quat --> [q1 q2 q3 q4], where q4 is the scalar
 
 q4 = quat(4);
