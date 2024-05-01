@@ -412,7 +412,8 @@ w_sat   = [deg2rad(10); 0; deg2rad(10)];
 w_r     = 10; %deg2rad(50); % -0.02 rad/s is unstable, deg2rad(50) is stable
 
 % Angular velocity
-e       = [-1;0;-1] / sqrt(3);
+e_vec   = [1;0;1] ;
+e       = e_vec/ norm(e_vec);
 p       = deg2rad(90); % for PS4-Q1, spacecraft initially aligned with inertial frame;
 q_0     = [e(1)*sin(p/2);
            e(2)*sin(p/2);

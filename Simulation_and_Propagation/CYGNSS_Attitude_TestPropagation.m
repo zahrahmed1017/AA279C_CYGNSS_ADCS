@@ -13,11 +13,12 @@ load("InertiaData.mat")
 %% Initial conditions
 % w_0 = [0.001, 0, deg2rad(5)]'; % rad/s
 % w_0 = [ 0, deg2rad(1.5), deg2rad(5)]'; % rad/s (pitch, roll, yaw)
-w_0 = [ 0, 0, deg2rad(5)]'; % rad/s (pitch, roll, yaw)
+w_0   = [ 0, 0, deg2rad(5)]'; % rad/s (pitch, roll, yaw)
 M_vec = [0, 0, 0]';
 
 % initial minute rotation p = 0.001 rad about z axis (to avoid singularity)
-e = [1;1;1] / sqrt(3);
+e_vec = [1;1;1]; 
+e     = e_vec/ norm(e_vec);
 % p = 0.5;
 p = 0; % for PS4-Q1
 q_0 = [e(1)*sin(p/2);
