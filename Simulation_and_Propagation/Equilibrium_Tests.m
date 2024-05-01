@@ -22,7 +22,7 @@ q_0 = [e(1)*sin(p/2);
        e(3)*sin(p/2);
        cos(p/2)];
 
-t_span = 0:3:10*60;
+t_span = 0:1:10*60;
 
 % propagate attitude
 options = odeset('RelTol', 1e-7, 'AbsTol', 1e-9);
@@ -110,10 +110,10 @@ A_eci_rtn = [RTNout(1, 1:3)', RTNout(1, 4:6)', RTNout(1, 7:9)' ]';
 % (rotation from inertial to PA is same as rotation from inertial to RTN)
 % q_init = dcm2quaternion(A_eci_rtn); % want to represent an initial rotation from inertial
 q_init = dcm2quat(A_eci_rtn);
-q_init = q_init([2 3 4 1]);
+q_init = q_init([2 3 4 1])';
 
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-w_0 = [ 0, 0, deg2rad(5)]'; % rad/s about the N axis
+w_0 = [ 0, 0, deg2rad(10)]'; % rad/s about the N axis
 qw_0 = [q_init; w_0];
 [t_q, qw_prop] = ode113(@(t,qw) PropagateAttitude_Quat(qw, M_vec, I_p), t_span, qw_0, options);
 
@@ -128,14 +128,17 @@ for i=1:n
 
     % get A_rtn_pa
     A_rtn_eci =  [RTNout(i, 1:3)', RTNout(i, 4:6)', RTNout(i, 7:9)' ];
-    A_eci_pa = quaternion2dcm(qw_prop(i,1:4));
+    % A_eci_pa = quaternion2dcm(qw_prop(i,1:4)); % something wring with
+    % this function 
+    quat_i = qw_prop(i,1:4);
+    A_eci_pa = quat2dcm(quat_i([4, 1, 2, 3]) );
     A_rtn_pa = A_eci_pa * A_rtn_eci;
 
     % convert to quaternion
     q_i = dcm2quaternion(A_rtn_pa); % we actually don't need this
 
     % save euler angles
-    [phi_i, theta_i, psi_i] = dcm2angle(A_rtn_pa, 'ZXZ');
+    [phi_i, theta_i, psi_i] = dcm2angle(A_rtn_pa, 'ZYX');
     angs_i = [phi_i, theta_i, psi_i] ;
     euler_angs_rtn(i,:) = angs_i;
 
@@ -154,7 +157,7 @@ plot(t_q, euler_angs_rtn(:,1),'LineWidth', 2);
 plot(t_q, euler_angs_rtn(:,2), 'LineWidth', 2);
 plot(t_q, euler_angs_rtn(:,3), 'LineWidth', 2);
 legend('\phi', '\theta', '\psi')
-title('Quaternion Propagation shown as ZXZ Euler Angles Attitude in RTN frame')
+title('Quaternion Propagation shown as ZYX Euler Angles Attitude in RTN frame')
 grid on; 
 
 figure 
