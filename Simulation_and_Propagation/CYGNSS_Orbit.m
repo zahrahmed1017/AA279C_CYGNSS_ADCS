@@ -20,7 +20,8 @@ state = OE2ECI(oe, muE);
 % Propagate Orbit for multiple orbits
 numPeriods  = 1;
 % tspan       = 0 : 60 : T * numPeriods; % simulate once an hour?
-tspan       = 0:10:2500;
+% tspan       = 0:10:2500;
+tspan = 0:3:10*60; % for equil test
 initial     = state;
 options     = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 [tout,Xout] = ode113(@(t,State) PropagateOrbit(State, muE),...

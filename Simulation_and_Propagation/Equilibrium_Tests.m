@@ -83,3 +83,97 @@ saveas(gcf, "Figures_and_Plots/PS4/Q1a_euler_angs.png"); % for PS4
 % Repeat a. by setting the initial attitude to match the RTN frame. Set the
 % initial angular velocity to be non-zero only about N. Show the evolution 
 % of attitude motion in the RTN frame & give an interpretation of the results
+
+% Propagate orbit over the time span --> R T N vectors
+% Define Orbital Properties
+a   = 6903;         % km
+e   = 0.00162;
+i   = deg2rad(35);  % rad     
+w   = deg2rad(60);  % rad
+O   = deg2rad(120); % rad
+v   = deg2rad(0);   % rad        
+muE = 398600;       % [km^3/s^2]
+oe = [a; e; i; O; w; v];
+% Convert to ECI position and velocity for orbit propagation 
+state = OE2ECI(oe, muE);
+initial     = state;
+options     = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+[tout,RVout] = ode113(@(t,State) PropagateOrbit(State, muE),...
+                     t_span, initial, options);
+RTNout = rv2rtn(RVout);
+
+% get initial rotation from inertial to RTN (1st row from RTNout)
+A_eci_rtn = [RTNout(1, 1:3)', RTNout(1, 4:6)', RTNout(1, 7:9)' ]';
+% A_eci_rtn
+
+% set this as the initial attitude 
+% (rotation from inertial to PA is same as rotation from inertial to RTN)
+% q_init = dcm2quaternion(A_eci_rtn); % want to represent an initial rotation from inertial
+q_init = dcm2quat(A_eci_rtn);
+q_init = q_init([2 3 4 1]);
+
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+w_0 = [ 0, 0, deg2rad(5)]'; % rad/s about the N axis
+qw_0 = [q_init; w_0];
+[t_q, qw_prop] = ode113(@(t,qw) PropagateAttitude_Quat(qw, M_vec, I_p), t_span, qw_0, options);
+
+% plot the attitude motion in the RTN frame
+% i.e., the rotation from RTN to PA and body rates
+[n,~] = size(qw_prop);
+euler_angs_rtn = zeros(n, 3);
+body_rates_pa = zeros(n, 3);
+body_rates_rtn = zeros(n, 3);
+
+for i=1:n
+
+    % get A_rtn_pa
+    A_rtn_eci =  [RTNout(i, 1:3)', RTNout(i, 4:6)', RTNout(i, 7:9)' ];
+    A_eci_pa = quaternion2dcm(qw_prop(i,1:4));
+    A_rtn_pa = A_eci_pa * A_rtn_eci;
+
+    % convert to quaternion
+    q_i = dcm2quaternion(A_rtn_pa); % we actually don't need this
+
+    % save euler angles
+    [phi_i, theta_i, psi_i] = dcm2angle(A_rtn_pa, 'ZXZ');
+    angs_i = [phi_i, theta_i, psi_i] ;
+    euler_angs_rtn(i,:) = angs_i;
+
+    % save body rates in PA
+    body_rates_pa(i,:) = qw_prop(i,5:7);
+
+    % save body rates in RTN
+    body_rates_rtn(i,:) = A_rtn_pa' * qw_prop(i,5:7)';
+
+
+end
+
+figure 
+hold on
+plot(t_q, euler_angs_rtn(:,1),'LineWidth', 2);
+plot(t_q, euler_angs_rtn(:,2), 'LineWidth', 2);
+plot(t_q, euler_angs_rtn(:,3), 'LineWidth', 2);
+legend('\phi', '\theta', '\psi')
+title('Quaternion Propagation shown as ZXZ Euler Angles Attitude in RTN frame')
+grid on; 
+
+figure 
+hold on
+plot(t_q, body_rates_rtn(:,1),'LineWidth', 2);
+plot(t_q, body_rates_rtn(:,2), 'LineWidth', 2);
+plot(t_q, body_rates_rtn(:,3), 'LineWidth', 2);
+legend('\omega_x', '\omega_y', '\omega_z')
+title('Body rates in RTN frame')
+grid on; 
+
+
+figure 
+hold on
+plot(t_q, body_rates_pa(:,1),'LineWidth', 2);
+plot(t_q, body_rates_pa(:,2), 'LineWidth', 2);
+plot(t_q, body_rates_pa(:,3), 'LineWidth', 2);
+legend('\omega_x', '\omega_y', '\omega_z')
+title('Body rates in PA frame')
+grid on; 
+
+
