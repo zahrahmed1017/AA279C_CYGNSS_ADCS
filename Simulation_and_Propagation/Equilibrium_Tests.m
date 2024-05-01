@@ -116,8 +116,8 @@ q_init = dcm2quat(A_eci_rtn);
 q_init = q_init([2 3 4 1])';
 
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-w_0 = [ 0, 0, deg2rad(5)]'; % rad/s about the N axis
-% w_0 = [ 0, 0, sqrt(muE/(a^3))]';
+% w_0 = [ 0, 0, deg2rad(5)]'; % rad/s about the N axis
+w_0 = [ 0, 0, sqrt(muE/(a^3))]';
 qw_0 = [q_init; w_0];
 [t_q, qw_prop] = ode113(@(t,qw) PropagateAttitude_Quat(qw, M_vec, I_p), t_span, qw_0, options);
 
