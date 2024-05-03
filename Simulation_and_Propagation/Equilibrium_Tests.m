@@ -131,8 +131,8 @@ body_rates_rtn = zeros(n, 3);
 for i=1:n
 
     % get A_rtn_pa
-    A_rtn_eci =  [RTNout(i, 1:3)', RTNout(i, 4:6)', RTNout(i, 7:9)' ];
-    % A_eci_pa = quaternion2dcm(qw_prop(i,1:4)); % something wring with
+    A_rtn_eci =  [RTNout(i, 1:3)', RTNout(i, 4:6)', RTNout(i, 7:9)'];
+    % A_eci_pa = quaternion2dcm(qw_prop(i,1:4)); % something wrong with
     % this function 
     quat_i = qw_prop(i,1:4);
     A_eci_pa = quat2dcm(quat_i([4, 1, 2, 3]) );

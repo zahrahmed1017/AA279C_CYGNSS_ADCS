@@ -307,9 +307,9 @@ saveas(gcf,"Figures_and_Plots/PS4/DualSpin_partC_stability_eulerAngs.png")
 
 % For equilibrium, w of the satellite should be aligned with w of rotor:
 r_rotor = [0,1,0]; % rotor axis of rotation
-delta_w = deg2rad(15);
-w_sat   = [0 + delta_w; deg2rad(5) + delta_w; 0 + delta_w];
-w_r     = -2 ; % -0.2 rad/s is unstable, deg2rad(50) is stable
+delta_w = deg2rad(0.1);
+w_sat   = [delta_w; deg2rad(5) + delta_w; delta_w];
+w_r     = deg2rad(50) ; % -0.2 rad/s is unstable, deg2rad(50) is stable
 
 % Angular velocity
 w_0     = [w_sat; w_r]; % [wx, wy, wz, wr]
@@ -318,8 +318,8 @@ w_0     = [w_sat; w_r]; % [wx, wy, wz, wr]
 K1 = (I_p(2,2) - I_p(3,3)) * w_sat(3) / I_rotor;
 K2 = (I_p(1,1) - I_p(3,3)) * w_sat(3) / I_rotor;
 
-fprintf('Stability criteria 1: %.4g \n',K1)
-fprintf('Stability criteria 1: %.4g \n',K2)
+fprintf('Stability criteria 1: %.4g \n', K1)
+fprintf('Stability criteria 1: %.4g \n', K2)
 fprintf('Rotor angular velocity: %.4g \n', w_r)
 
 % Using the same other initial conditions as first part of this script
@@ -366,7 +366,7 @@ xlabel("Time, s")
 ylabel("Magnitude, deg/s")
 fontsize(14, 'points')
 title('w_z')
-saveas(gcf, "Figures_and_Plots/PS4/DualSpin_partD_intermediate_unstable.png")
+saveas(gcf, "Figures_and_Plots/PS4/DualSpin_partD_intermediate_stable.png")
 
 % Convert to Euler angles: % Going to use 3-2-1
 EulerAngs = zeros(length(qw_prop), 3);
@@ -379,12 +379,12 @@ end
 
 figure 
 subplot(3,1,1)
-fontsize(14, 'points')
 grid on;
-plot(t_q, rad2deg(EulerAngs(:,1)), 'LineWidth',2)
+plot(t_q, rad2deg(EulerAngs(:,3)), 'LineWidth',2)
 xlabel("Time, s")
 ylabel("Angle, deg")
-title('Yaw')
+fontsize(14, 'points')
+title('Roll')
 
 subplot(3,1,2)
 fontsize(14, 'points')
@@ -395,21 +395,21 @@ ylabel("Angle, deg")
 title('Pitch')
 
 subplot(3,1,3)
+fontsize(14, 'points')
 grid on;
-plot(t_q, rad2deg(EulerAngs(:,3)), 'LineWidth',2)
+plot(t_q, rad2deg(EulerAngs(:,1)), 'LineWidth',2)
 xlabel("Time, s")
 ylabel("Angle, deg")
-fontsize(14, 'points')
-title('Roll')
-saveas(gcf, "Figures_and_Plots/PS4/DualSpin_partD_intermediate_eulerAngs_unstable.png")
+title('Yaw')
+saveas(gcf, "Figures_and_Plots/PS4/DualSpin_partD_intermediate_eulerAngs_stable.png")
 
 %% Arbitrary Axis:
 
 % For equilibrium, w of the satellite should be aligned with w of rotor:
 r_rotor = [1,0,0]; % rotor axis of rotation
 r_rotor_hat = r_rotor / norm(r_rotor);
-w_sat   = [deg2rad(10); 0; deg2rad(10)];
-w_r     = 10; %deg2rad(50); % -0.02 rad/s is unstable, deg2rad(50) is stable
+w_sat   = [deg2rad(1); deg2rad(2); deg2rad(1)];
+w_r     = 2; %deg2rad(50); % -0.02 rad/s is unstable, deg2rad(50) is stable
 
 % Angular velocity
 e_vec   = [1;0;1] ;
