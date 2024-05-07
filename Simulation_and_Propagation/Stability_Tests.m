@@ -76,6 +76,10 @@ w_0_p = w_0 + d_w;
 qw_0 = [q_0; w_0_p];
 [t_q, qw_prop] = ode113(@(t,qw) PropagateAttitude_Quat(qw, M_vec, I_p), t_span, qw_0, options);
 
+% rotate rates to inertial frame
+w_i =zeros(length(qw_prop), 3);
+
+
 % plot rates 
 figure()
 hold on;
