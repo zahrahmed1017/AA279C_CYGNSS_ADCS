@@ -1,4 +1,4 @@
-function [area, barycenter, normal] = rectangleGeometry(vertices, T_wrtCM)
+function [area, barycenter, normal] = rectangleGeometry(vertices, T_wrtCM, faceDir)
 
     % Calculate the vectors representing two adjacent sides of the rectangle
     side1 = vertices(2,:) - vertices(1,:);
@@ -18,6 +18,12 @@ function [area, barycenter, normal] = rectangleGeometry(vertices, T_wrtCM)
     normal = cross(side1, side2);
     % Normalize the normal vector to have unit length
     normal = normal / norm(normal);
+
+    if dot(normal, barycenter) < 0 && strcmp(faceDir,'out')
+        normal = -normal;
+    elseif dot(normal, barycenter) > 0 && strcmp(faceDir,'in')
+        normal = -normal;
+    end
     
 
 end

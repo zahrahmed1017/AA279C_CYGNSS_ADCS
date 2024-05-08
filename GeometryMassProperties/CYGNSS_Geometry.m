@@ -151,6 +151,22 @@ function cygnss = CYGNSS_Geometry()
                                    sen_w/2, -sen_l/2, sen_h/2];
     cygnss.sensor.origin = [sp_w/2 - sen_w/2, 0, sp_h + bus_fh + sen_h/2]; % wrt sp frame
 
+    %%%%%%%%%%%%% Face Direction %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    cygnss.sp.faceDir.top       = 'out';
+    cygnss.sp.faceDir.bl        = 'in';
+    cygnss.sp.faceDir.br        = 'in';
+
+    cygnss.bus.faceDir.bottom   = 'out';
+    cygnss.bus.faceDir.front    = 'out';
+    cygnss.bus.faceDir.back     = 'out';
+    cygnss.bus.faceDir.left1    = 'out';
+    cygnss.bus.faceDir.left2    = 'out';
+    cygnss.bus.faceDir.right1   = 'out';
+    cygnss.bus.faceDir.right2   = 'out';
+    
+    cygnss.sensor.faceDir.bottom  = 'out';
+
 
     %%%%%%%%%%%%% Surface Normal, Barycenter, and Area %%%%%%%%%%%%%%%%%%%%
 
@@ -158,6 +174,6 @@ function cygnss = CYGNSS_Geometry()
     cygnss = SurfaceDiscretization(cygnss, 'bus');
     cygnss = SurfaceDiscretization(cygnss, 'sensor');
 
-
+    save('GeometryMassProperties/cygnss.mat', 'cygnss');
 
 end

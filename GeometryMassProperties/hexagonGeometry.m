@@ -1,4 +1,4 @@
-function [area, barycenter, normal] = hexagonGeometry(vertices, T_wrtCM)
+function [area, barycenter, normal] = hexagonGeometry(vertices, T_wrtCM, faceDir)
     % Ensure the vertices are in order (either clockwise or counter-clockwise)
     % vertices is a 6x3 matrix where each row represents a vertex
     
@@ -18,4 +18,10 @@ function [area, barycenter, normal] = hexagonGeometry(vertices, T_wrtCM)
     normal = cross(vector1, vector2);
     % Normalize the normal vector to have unit length
     normal = normal / norm(normal);
+
+    if dot(normal, barycenter) < 0 && strcmp(faceDir,'out')
+        normal = -normal;
+    elseif dot(normal, barycenter) > 0 && strcmp(faceDir,'in')
+        normal = -normal;
+    end
 end
