@@ -64,7 +64,7 @@ K_T2 = (Iy - Iz) / Ix;
 
 plot(K_T2, K_R2, 'k^')
 
-% Third K coefficients: x aligned w/ T, Y aligned w/ N
+% Third K coefficients: X aligned w/ N; Z aligned w/ T
 
 K_N3 = (Iz - Iy) / Ix;
 K_R3 = (Ix - Iz) / Iy;
@@ -83,7 +83,7 @@ K_R4 = (Ix2 - Iz2) / Iy2;
 K_T4 = (Ix2 - Iy2) / Iz2;
 plot(K_T4, K_R4, 'k*')
 
-
+box on
 
 legend("$K_R \geq K_T$", "$K_R K_T \leq 0$", "$1 + 3 K_T + K_R K_T \leq 4\sqrt{K_R*K_T}$", ...
      "$Z_p \parallel N$; $X_p \parallel R$",...
@@ -91,6 +91,8 @@ legend("$K_R \geq K_T$", "$K_R K_T \leq 0$", "$1 + 3 K_T + K_R K_T \leq 4\sqrt{K
      "$X_p \parallel N$; $Y_p \parallel R$", ...
      "$X_p \parallel N$; $Y_p \parallel R$; new inertia tensor", ...
      'Interpreter', 'latex', 'location', 'eastoutside')
+
+saveas(gcf, "Figures_and_Plots/PS5/Q1a_StabilityPlot.png");
 
 
 %% Part b - Try to reproduce stable & unstable motion - Z aligned w/ N case
@@ -121,7 +123,7 @@ rv_state = OE2ECI(oe, muE);
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 20;
+numPeriods  = 40;
 % tspan       = 0 : 1 : T * numPeriods; % simulate once an minute?
 % tspan       = 0 : 10 : 100;
 tspan      = [0, T*numPeriods];
