@@ -38,6 +38,8 @@ end
 % Calculate SRP Torque
 srpTorque_pa = [0;0;0];
 if SRP
+    srpTorque_eci = CalculateSRPTorque(cygnss, rv , R_i_pa, caldate);
+    srpTorque_pa  = R_i_pa * srpTorque_eci; 
 end
 
 % Total External Torque:

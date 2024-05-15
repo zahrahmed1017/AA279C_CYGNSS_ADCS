@@ -1,8 +1,8 @@
 function aeroDragTorque_eci = CalculateDragTorque(cygnss, eci , w_sat_pa , R_i_pa)
 
 % Constants
-r_E   = 6378137; % m, in case I need to convert anything
-H     = 10000; % m, characteristic height
+r_E   = 6378137; % [m]
+H     = 7500; % [m], characteristic height
 rho_0 = 1.225 ; %kg/m^3
 Cd    = 2; 
 w_E   = [0; 0; 7.292e-5]; % rad/s rotation of earth in ECI
@@ -13,7 +13,7 @@ satVel_eci = eci(4:6); % km/s
 r_mag      = norm(satPos_eci); % km
 
 % Convert angular velocity of satellite from PA to inertial:
-w_sat_eci = R_i_pa * w_sat_pa; % rad/s
+w_sat_eci = R_i_pa' * w_sat_pa; % rad/s
 
 % Velocity of COM wrt Earth
 satVel_wrtE = satVel_eci - cross(w_E, satPos_eci); % km/s
@@ -42,12 +42,12 @@ for i = 1 : length(components)
         faceNormal_pa = cygnss.(component).normal.(face)'; 
         faceArea      = cygnss.(component).area.(face) ; % m^2
 
-        facePos_eci    = R_i_pa * facePos_pa;    % m
-        faceNormal_eci = R_i_pa * faceNormal_pa; % m 
+        facePos_eci    = R_i_pa' * facePos_pa;    % m
+        faceNormal_eci = R_i_pa' * faceNormal_pa; % m 
         
         % Velocity of surface wrt Earth (assuming no winds)
         surfVel_wrtE = satVel_wrtE + cross(w_sat_eci, facePos_eci/1000); % km/s
-        surfVel_norm = norm(surfVel_wrtE); % km/s 
+        surfVel_norm = norm(surfVel_wrtE);                               % km/s 
         surfVel_unit = surfVel_wrtE / surfVel_norm; 
 
         % Calculate Drag force for this face:

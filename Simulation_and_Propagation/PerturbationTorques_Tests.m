@@ -107,7 +107,7 @@ magTorque_1orbit_eci = zeros(length(tout),4);
 for j = 1:length(tout)
 
     fractionDay = tout(j)/86400;
-    calday      = datetime(initialEpoch(1),initialEpoch(2), initialEpoch(3),0,0,timeStep);
+    calday      = datetime(initialEpoch(1),initialEpoch(2), initialEpoch(3),0,0,tout(j));
     gmst        = CAL2GMST(initialEpoch(1),initialEpoch(2), initialEpoch(3), fractionDay);
 
     [magTorque_eci,earthMagField] = CalculateMagneticTorque(Xout(j,1:3), calday, gmst);
@@ -202,7 +202,7 @@ dcm_0 = quat2dcm(q_0([4 1 2 3])');
 
 aeroDragTorque_eci = CalculateDragTorque(cygnss, rv_state , w_0 , dcm_0);
 
-%% INITIAL EPOCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Testing Aerodyanmic Drag Torque over one orbit %%%%%%%%%%%%%%%%%%%%%%%%%
 initialEpoch = [2016, 12, 16];
 
 
@@ -305,6 +305,130 @@ fontsize(14,'points')
 
 legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
 
+%% Test SRP Torque over one orbit:
+
+%%%% INITIALIZE ORBIT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rE  = 6378; % km
+% a   = rE + 3000;     % km
+a   = rE + 525;
+e   = 0;
+i   = deg2rad(35);  % rad     
+w   = deg2rad(60);  % rad
+O   = deg2rad(120); % rad
+v   = deg2rad(0);   % rad        
+muE = 398600;       % [km^3/s^2]
+
+% Convert to ECI position and velocity for orbit propagation 
+oe       = [a; e; i; O; w; v];
+rv_state = OE2ECI(oe, muE);
+
+%%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+T           = 2*pi*sqrt(a^3/muE); % period in seconds
+T_days      = T/(24 * 60 * 60);
+numPeriods  = 1;
+tspan       = 0 : 60 : T * numPeriods; % simulate once an minute?
+
+%%%% INITIALIZE ATTITUDE AND ANGULAR RATES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Initial angular velocity:
+w_0         = [0, 0, deg2rad(5)]';
+
+% Initial attitude:
+e_vec = [1;1;1]; 
+e     = e_vec/ norm(e_vec);
+p     = 0; % for PS4-Q1
+q_0   = [e(1)*sin(p/2);
+         e(2)*sin(p/2);
+         e(3)*sin(p/2);
+         cos(p/2)];
+dcm_0 = quat2dcm(q_0([4 1 2 3])');
+
+%%%% INITIALIZE EPOCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+initialEpoch = [2016, 12, 16];
+
+%%% RUN SIMULATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+state_0   = [q_0; w_0; rv_state];
+gravityGrad = 0;
+magTorque   = 0;
+aeroDrag    = 0;
+SRP         = 0;
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+
+[tout, state_out] = ...
+    ode113(@(t,state) PropagateOrbit_and_Attitude_wPerturbations(state, I_p, muE, cygnss, t, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP),...
+    tspan, state_0, options);
+
+initialEpoch = [2016, 12, 16];
+srpTorque_1orbit_eci = zeros(length(tout),4);
+earth2sun_all_eci    = zeros(length(tout),3);
+
+for j = 1:length(tout)
+
+    q_i   = state_out(j,1:4);
+    w_i   = state_out(j,5:7);
+    rv_i  = state_out(j,8:13);
+    dcm_i = quat2dcm(q_i([4 1 2 3]));
+
+    fractionDay = tout(j)/86400;
+    calday      = datetime(initialEpoch(1), initialEpoch(2), initialEpoch(3),0,0,tout(j));
+
+    [srpTorque_eci, earth2sun_eci] = CalculateSRPTorque(cygnss, rv_i, dcm_i, calday);
+
+    srpTorque_1orbit_eci(j,1:3) = srpTorque_eci;
+    srpTorque_1orbit_eci(j,4)   = norm(srpTorque_eci);
+    earth2sun_all_eci(j,:)      = earth2sun_eci;
+
+end
+
+t_hr = tout/3600;
+
+figure()
+plot(t_hr, srpTorque_1orbit_eci(:,1), 'LineWidth',2)
+hold on;
+grid on;
+plot(t_hr, srpTorque_1orbit_eci(:,2), 'LineWidth',2)
+plot(t_hr, srpTorque_1orbit_eci(:,3), 'LineWidth', 2)
+plot(t_hr, srpTorque_1orbit_eci(:,4), 'LineWidth', 2)
+title('SRP Torque Components in ECI Frame')
+xlabel('Time [hr]')
+ylabel('Magnitude [Nm]')
+legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
+fontsize(14,'points')
+
+figure()
+
+plot3(state_out(:,8), state_out(:,9), state_out(:,10),'Color','r','LineWidth',3)
+title('ECI Position')
+hold on;
+grid on;
+axis equal;
+xlabel('X [km]')
+ylabel('Y [km]')
+zlabel('Z [km]')
+fontsize(14,'points')
+
+%plot Earth-sized sphere
+rE = 6378;
+[xE,yE,zE] = ellipsoid(0,0,0,rE,rE,rE,20);
+surface(xE, yE , zE , 'FaceColor', 'blue', 'EdgeColor', 'black', 'FaceAlpha', 0.2);
+view (3);
+
+% Plot vector from Earth to Sun
+origin = [0,0,0];
+e2s_scaled_init  = earth2sun_all_eci(1,:)/norm(earth2sun_all_eci(1,:)) * 15000;
+e2s_scaled_final = earth2sun_all_eci(end,:)/norm(earth2sun_all_eci(end,:)) * 15000;
+quiver3(origin(1), origin(2), origin(3), e2s_scaled_init(1), ...
+    e2s_scaled_init(2), e2s_scaled_init(3), 'k', 'LineWidth', 3, 'MarkerSize', 5);
+
+% Plot CYGNSS initial point
+% plot3(state_out(1,8), state_out(1,9), state_out(1,10), 'o', 'MarkerSize',10,'MarkerFaceColor', 'k')
+plot3(state_out(7,8), state_out(7,9), state_out(7,10), 'o', 'MarkerSize',10,'MarkerFaceColor', 'k')
+plot3(state_out(68,8), state_out(68,9), state_out(68,10), 'o', 'MarkerSize',10,'MarkerFaceColor', 'k')
+
+hold off; 
+
+% legend('CYGNSS Orbit', 'Initial Sun Vector', 'Final Sun Vector')
+
 
 %% Now Simulate Orbit and Attitude with Gravity Gradient, Magnetic Torque, and Aero Drag Together
 
@@ -365,6 +489,7 @@ eulerAngs     = zeros(length(t), 3);
 gravGrad      = zeros(length(t), 4);
 magTorque     = zeros(length(t), 4);
 aeroDrag      = zeros(length(t), 4);
+srpTorque     = zeros(length(t), 4);
 totTorque     = zeros(length(t), 4);
 
 
@@ -381,7 +506,6 @@ for i = 1 : length(t)
 
     gravGrad(i,:) = [gg, gg_mag];
 
-
     % Calculate Magnetic Torque:
     fractionDay = t(i)/86400;
     calday      = datetime(initialEpoch(1),initialEpoch(2), initialEpoch(3), 0, 0, t(i));
@@ -393,7 +517,6 @@ for i = 1 : length(t)
     magTorque(i,1:3) = magTorque_pa;
     magTorque(i,4)   = norm(magTorque_pa);
 
-
     % Calculate Aerodynamic Drag:
     drag_eci  = CalculateDragTorque(cygnss, rv_i' , w_i' , dcm_i);
     drag_pa   = dcm_i * drag_eci;
@@ -402,8 +525,16 @@ for i = 1 : length(t)
     aeroDrag(i,1:3) = drag_pa';
     aeroDrag(i,4)   = drag_norm;
 
+    % Calculate SRP Torque:
+    [srp_eci, ~] = CalculateSRPTorque(cygnss, rv_i, dcm_i, calday);
+    srp_pa       = dcm_i * srp_eci;
+    srp_norm     = norm(srp_pa);
+
+    srpTorque(i,1:3) = srp_pa';
+    srpTorque(i,4)   = srp_norm;
+
     % Total Torques:
-    tot_torque_i = gg + magTorque_pa' + drag_pa';
+    tot_torque_i = gg + magTorque_pa' + drag_pa' + srp_pa';
     tot_torque_norm = norm(tot_torque_i);
 
     totTorque(i,:) = [tot_torque_i, tot_torque_norm];
@@ -421,7 +552,7 @@ t_hr = t/3600;
 
 figure()
 % Gravity Gradient
-subplot(3,1,1)
+subplot(4,1,1)
 plot(t_hr, gravGrad(:,1), 'LineWidth',2)
 hold on;
 grid on;
@@ -435,7 +566,7 @@ legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
 fontsize(14,'points')
 
 % Magnetic Torque
-subplot(3,1,2)
+subplot(4,1,2)
 plot(t_hr, magTorque(:,1), 'LineWidth',2)
 hold on;
 grid on;
@@ -449,7 +580,7 @@ legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
 fontsize(14,'points')
 
 % Aerodynamic Drag Torque
-subplot(3,1,3)
+subplot(4,1,3)
 plot(t_hr, aeroDrag(:,1), 'LineWidth',2)
 hold on;
 grid on;
@@ -461,6 +592,21 @@ xlabel('Time [hr]')
 ylabel('Magnitude [Nm]')
 legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
 fontsize(14,'points')
+
+% SRP Torque
+subplot(4,1,4)
+plot(t_hr, srpTorque(:,1), 'LineWidth',2)
+hold on;
+grid on;
+plot(t_hr, srpTorque(:,2), 'LineWidth', 2)
+plot(t_hr, srpTorque(:,3), 'LineWidth', 2)
+plot(t_hr, srpTorque(:,4), 'LineWidth', 2)
+title('SRP Torque Components in Principal Frame')
+xlabel('Time [hr]')
+ylabel('Magnitude [Nm]')
+legend('X Component', 'Y Component', 'Z Component', 'Magnitude')
+fontsize(14,'points')
+
 
 % Total Torque
 figure()
