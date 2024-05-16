@@ -118,6 +118,9 @@ for i=1:length(t_out)
     q_est = v(:,ind);
     R_est3 = quat2dcm(q_est([4 1 2 3])');
 
+    % rate measurement
+    w_meas = 
+
 end
 
 
