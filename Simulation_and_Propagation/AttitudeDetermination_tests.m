@@ -58,12 +58,51 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
     ode113(@(t,state) PropagateOrbit_and_Attitude_wPerturbations(state, I_p, muE, cygnss, t, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP),...
     tspan, state_0, options);
 
+% create some fictitious star unit vectors
+star1_i = [1/sqrt(2), 1/sqrt(2), 0]';
+star2_i = [0, 1, 0]';
+
+DCM_est_det1 = []; % this is the set of DCMs from the deterministic method w/ 3 unit vecs
 
 for i=1:length(t_out)
 
     % Get fake sensor measurements -- magnetic field vector and sun vector
 
-    [~,~, B_vec] = CalculateMagneticTorque(rv_state(1:3),calday, gmst);
+    [~,B_norm, B_vec_i] = CalculateMagneticTorque(rv_state(1:3),calday, gmst);
+    B_vec_i = B_vec_i/norm(B_vec_i);
+
+    [sun_vec_i, ~] = CalculateSunPositionECI(calday);
+    sun_vec_i = sun_vec_i/norm(sun_vec_i);
+
+    % rotate into PA frame at this time step
+    R_i_p = quat2dcm(state_out(i,1:4));
+    B_vec_p = R_i_p * B_vec_i;
+    sun_vec_p = R_i_p * sun_vec_i;
+    star1_p =  R_i_p * star1_i;
+    star2_p =  R_i_p * star2_i;
+
+    % Deterministic method w/ 3 unit vectors
+    V1 = [B_vec_i, sun_vec_i, star1_i];
+    M1 = [B_vec_p, sun_vec_p, star1_p];
+    R_est1 = M1 * inv(V1);
+
+    % Deterministic method w/ 2 unit vectors and "dummy"
+    p_p = B_vec_p;
+    q_p = cross(B_vec_p, sun_vec_p) / norm(cross(B_vec_p, sun_vec_p));
+    r_p = cross(p_p, q_p);
+    p_i = B_vec_i;
+    q_i = cross(B_vec_i, sun_vec_i) / norm(cross(B_vec_i, sun_vec_i));
+    r_i = cross(p_i, q_i);
+    V2 = [p_i, q_i, r_i];
+    M2 = [p_p, q_p, r_p];
+    R_est2 = M2 * inv(V2);
+
+    % q-method
+    weights = [1 1 2 2]';
+    weights = weights/norm(weights);
+
+
+    
 
 
 
