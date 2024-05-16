@@ -63,6 +63,9 @@ star1_i = [1/sqrt(2), 1/sqrt(2), 0]';
 star2_i = [0, 1, 0]';
 
 DCM_est_det1 = []; % this is the set of DCMs from the deterministic method w/ 3 unit vecs
+DCM_est_det2 = []; % this is the set of DCMs from the deterministic method w/ 2 unit vecs
+DCM_est_q = []; % this is the set of DCMs from the q method
+
 
 for i=1:length(t_out)
 
@@ -85,6 +88,7 @@ for i=1:length(t_out)
     V1 = [B_vec_i, sun_vec_i, star1_i];
     M1 = [B_vec_p, sun_vec_p, star1_p];
     R_est1 = M1 * inv(V1);
+    DCM_est_det1 = cat(3, DCM_est_det1, R_est1);
 
     % Deterministic method w/ 2 unit vectors and "dummy"
     p_p = B_vec_p;
@@ -96,16 +100,23 @@ for i=1:length(t_out)
     V2 = [p_i, q_i, r_i];
     M2 = [p_p, q_p, r_p];
     R_est2 = M2 * inv(V2);
+    DCM_est_det2 = cat(3, DCM_est_det2, R_est2);
 
     % q-method
-    weights = [1 1 2 2]';
+    weights = [1 1 2 2];
     weights = weights/norm(weights);
-
-
-    
-
-
-
+    W = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_p, sun_vec_p, star1_p, star2_p];
+    U = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_i, sun_vec_i, star1_i, star2_i];
+    B = W*U';
+    S = B + B';
+    Z = [B(2,3)-B(3,2), B(3,1)-B(1,3), B(1,2)-B(2,1)]';
+    sigma = trace(B);
+    K = [S-eye(3)*sigma, Z; 
+         Z',       sigma ];
+    [v,d] = eig(K);
+    [~,ind] = max([d(1,1), d(2,2), d(3,3), d(4,4)]);
+    q_est = v(:,ind);
+    R_est3 = quat2dcm(q_est([4 1 2 3])');
 
 end
 
