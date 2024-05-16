@@ -539,6 +539,9 @@ for i = 1 : length(t)
 
     totTorque(i,:) = [tot_torque_i, tot_torque_norm];
 
+    % Attitude in Euler Angles
+    
+
 end
 
 % % Calculate Max Theoretical Values:
