@@ -1,4 +1,4 @@
-function [magTorque_eci,B_norm] = CalculateMagneticTorque(eci, caldate, gmst)
+function [magTorque_eci,B_norm, B] = CalculateMagneticTorque(eci, caldate, gmst)
 % Calculating the magnetic torque as a dipole in the inertial frame!!
 % T_m = m x B where m is the satellites magnetic moment vector and B is the
 % Earth's magnetic field vector.
@@ -11,7 +11,7 @@ deltaYear      = years(timeSinceEpoch);
 % Gaussian Coefficients: [Wertz H-17]
 g01 = -30186 + 25.6 * deltaYear; % nT
 g11 = -2036 + 10 * deltaYear; % nT
-h11 = 5735 - 10.2 * deltaYear; % nT
+h11 = 5735 - 10.2 * deltaYear; % n
 
 % Dipole strength, coelevation, east longitude [Wertz H-18 through
 % H-20]
