@@ -96,9 +96,10 @@ for i=1:length(t_out)
     star2_p =  R_i_p * star2_i;
 
     % Deterministic method w/ 3 unit vectors
-    V1 = [B_vec_i, sun_vec_i, star1_i];
-    M1 = [B_vec_p, sun_vec_p, star1_p];
-    R_est1 = M1 * inv(V1);
+    % V1 = [B_vec_i, sun_vec_i, star1_i];
+    % M1 = [B_vec_p, sun_vec_p, star1_p];
+    % R_est1 = M1 * inv(V1);
+    R_est1 = deterministicAtt3(B_vec_p, sun_vec_p, star1_p, B_vec_i, sun_vec_i, star1_i);
     DCM_est_det1 = cat(3, DCM_est_det1, R_est1);
     
     % quat_est1 = dcm2quaternion(R_est1);
@@ -108,15 +109,16 @@ for i=1:length(t_out)
         
 
     % Deterministic method w/ 2 unit vectors and "dummy"
-    p_p = B_vec_p;
-    q_p = cross(B_vec_p, sun_vec_p) / norm(cross(B_vec_p, sun_vec_p));
-    r_p = cross(p_p, q_p);
-    p_i = B_vec_i;
-    q_i = cross(B_vec_i, sun_vec_i) / norm(cross(B_vec_i, sun_vec_i));
-    r_i = cross(p_i, q_i);
-    V2 = [p_i, q_i, r_i];
-    M2 = [p_p, q_p, r_p];
-    R_est2 = M2 * inv(V2);
+    % p_p = B_vec_p;
+    % q_p = cross(B_vec_p, sun_vec_p) / norm(cross(B_vec_p, sun_vec_p));
+    % r_p = cross(p_p, q_p);
+    % p_i = B_vec_i;
+    % q_i = cross(B_vec_i, sun_vec_i) / norm(cross(B_vec_i, sun_vec_i));
+    % r_i = cross(p_i, q_i);
+    % V2 = [p_i, q_i, r_i];
+    % M2 = [p_p, q_p, r_p];
+    % R_est2 = M2 * inv(V2);
+    R_est2 = deterministicAtt2(B_vec_p, sun_vec_p, B_vec_i, sun_vec_i);
     DCM_est_det2 = cat(3, DCM_est_det2, R_est2);
     [yaw_est2, pitch_est2, roll_est2] = dcm2angle(R_est2, 'ZYX');
     angs_est2 = [angs_est2; yaw_est2, pitch_est2, roll_est2];
@@ -125,18 +127,20 @@ for i=1:length(t_out)
     % q-method
     weights = [1 1 2 2];
     weights = weights/norm(weights);
-    W = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_p, sun_vec_p, star1_p, star2_p];
-    U = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_i, sun_vec_i, star1_i, star2_i];
-    B = W*U';
-    S = B + B';
-    Z = [B(2,3)-B(3,2), B(3,1)-B(1,3), B(1,2)-B(2,1)]';
-    sigma = trace(B);
-    K = [S-eye(3)*sigma, Z; 
-         Z',       sigma ];
-    [v,d] = eig(K);
-    [~,ind] = max([d(1,1), d(2,2), d(3,3), d(4,4)]);
-    q_est = v(:,ind);
-    R_est3 = quat2dcm(q_est([4 1 2 3])');
+    % W = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_p, sun_vec_p, star1_p, star2_p];
+    % U = [sqrt(weights); sqrt(weights); sqrt(weights)] .* [B_vec_i, sun_vec_i, star1_i, star2_i];
+    % B = W*U';
+    % S = B + B';
+    % Z = [B(2,3)-B(3,2), B(3,1)-B(1,3), B(1,2)-B(2,1)]';
+    % sigma = trace(B);
+    % K = [S-eye(3)*sigma, Z; 
+    %      Z',       sigma ];
+    % [v,d] = eig(K);
+    % [~,ind] = max([d(1,1), d(2,2), d(3,3), d(4,4)]);
+    % q_est = v(:,ind);
+    % R_est3 = quat2dcm(q_est([4 1 2 3])');
+
+    R_est3 = qMethod(weights, [B_vec_p, sun_vec_p, star1_p, star2_p], [B_vec_i, sun_vec_i, star1_i, star2_i]);
     [yaw_est3, pitch_est3, roll_est3] = dcm2angle(R_est3, 'ZYX');
     angs_est3 = [angs_est3; yaw_est3, pitch_est3, roll_est3];
         
@@ -218,7 +222,7 @@ legend("Ground truth yaw", ...
        "Estimated pitch", ...
        "Estimated roll")
 grid on
-title("Attitudes estimated w/ stochastic algorithm algorithm, 4 references")
+title("Attitudes estimated w/ stochastic algorithm, 4 references")
 xlabel("Time, s")
 ylabel("Angle, deg")
 saveas(gcf, "Figures_and_Plots/PS6/AttDet_stoc.png")
@@ -242,5 +246,5 @@ grid on
 title("Attitudes estimated w/ rate measurements")
 xlabel("Time, s")
 ylabel("Angle, deg")
-saveas(gcf, "Figures_and_Plots/PS6/AttDet_stoc.png")
+saveas(gcf, "Figures_and_Plots/PS6/AttDet_rate.png")
 
