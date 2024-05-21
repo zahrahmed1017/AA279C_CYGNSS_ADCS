@@ -1,4 +1,4 @@
-%% Testing attitude determination implementations
+%% Testing attitude determination implementations w/ error
 close all; clear; clc;
 
 load("InertiaData.mat")
@@ -57,6 +57,11 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
     ode113(@(t,state) PropagateOrbit_and_Attitude_wPerturbations(state, I_p, muE, cygnss, t, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP),...
     tspan, state_0, options);
 
+% Initialize sensors
+ss = BasicSunSensor(deg2rad(0.3), 0, calday);
+% ss = BasicSunSensor(0, 0, calday);
+mag = BasicMagSensor(deg2rad(0.3), 0, calday, gmst);
+
 % create some fictitious star unit vectors
 star1_i = [1/sqrt(2), 1/sqrt(2), 0]';
 star2_i = [0, 1, 0]';
@@ -80,18 +85,22 @@ for i=1:length(t_out)
     [yaw_gt, pitch_gt, roll_gt] = quat2angle(q_now([4 1 2 3]), 'ZYX');
     angs_gt = [angs_gt; yaw_gt, pitch_gt, roll_gt];
 
+    
+
     % Get fake sensor measurements -- magnetic field vector and sun vector
 
     [~,B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i,8:10),calday, gmst);
     B_vec_i = B_vec_i/norm(B_vec_i);
-
+   
     [sun_vec_i, ~] = CalculateSunPositionECI(calday);
     sun_vec_i = sun_vec_i/norm(sun_vec_i);
 
     % rotate into PA frame at this time step
     R_i_p = quat2dcm(state_out(i,[4 1 2 3]));
-    B_vec_p = R_i_p * B_vec_i;
-    sun_vec_p = R_i_p * sun_vec_i;
+    % B_vec_p = R_i_p * B_vec_i;
+    B_vec_p = mag.get_measurement(R_i_p, state_out(i, 8:10));
+    % sun_vec_p = R_i_p * sun_vec_i;
+    sun_vec_p = ss.get_measurement(R_i_p);
     star1_p =  R_i_p * star1_i;
     star2_p =  R_i_p * star2_i;
 
@@ -183,7 +192,22 @@ grid on
 title("Attitudes estimated w/ deterministic algorithm, 3 references")
 xlabel("Time, s")
 ylabel("Angle, deg")
-saveas(gcf, "Figures_and_Plots/PS6/AttDet_det3.png")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_det3_basicErr.png")
+
+figure
+hold on
+plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est1(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est1(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est1(:,3)), 'g-', 'LineWidth', 2)
+legend("Yaw error", ...
+       "Pitch error", ...
+       "Roll error")
+grid on
+title("Attitude errors w/ deterministic algorithm, 3 references")
+xlabel("Time, s")
+ylabel("Angle, deg")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_det3_error_basicErr.png")
+
 
 % deterministic w/ 2
 figure
@@ -204,7 +228,22 @@ grid on
 title("Attitudes estimated w/ deterministic algorithm, 2 references")
 xlabel("Time, s")
 ylabel("Angle, deg")
-saveas(gcf, "Figures_and_Plots/PS6/AttDet_det2.png")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_det2_basicErr.png")
+
+figure
+hold on
+plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est2(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est2(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est2(:,3)), 'g-', 'LineWidth', 2)
+legend("Yaw error", ...
+       "Pitch error", ...
+       "Roll error")
+grid on
+title("Attitude errors w/ deterministic algorithm, 2 references")
+xlabel("Time, s")
+ylabel("Angle, deg")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_det2_error_basicErr.png")
+
 
 % stochastic w/ 4
 figure
@@ -225,7 +264,21 @@ grid on
 title("Attitudes estimated w/ stochastic algorithm, 4 references")
 xlabel("Time, s")
 ylabel("Angle, deg")
-saveas(gcf, "Figures_and_Plots/PS6/AttDet_stoc.png")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_stoc_basicErr.png")
+
+figure
+hold on
+plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est3(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est3(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est3(:,3)), 'g-', 'LineWidth', 2)
+legend("Yaw error", ...
+       "Pitch error", ...
+       "Roll error")
+grid on
+title("Attitude errors w/ stochastic algorithm, 4 references")
+xlabel("Time, s")
+ylabel("Angle, deg")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_stoc_error_basicErr.png")
 
 % based on rates
 figure
@@ -246,5 +299,19 @@ grid on
 title("Attitudes estimated w/ rate measurements")
 xlabel("Time, s")
 ylabel("Angle, deg")
-saveas(gcf, "Figures_and_Plots/PS6/AttDet_rate.png")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_rate_basicErr.png")
+
+figure
+hold on
+plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est4(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est4(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est4(:,3)), 'g-', 'LineWidth', 2)
+legend("Yaw error", ...
+       "Pitch error", ...
+       "Roll error")
+grid on
+title("Attitude errors w/ rate measurements")
+xlabel("Time, s")
+ylabel("Angle, deg")
+saveas(gcf, "Figures_and_Plots/PS7/AttDet_rate_error_basicErr.png")
 
