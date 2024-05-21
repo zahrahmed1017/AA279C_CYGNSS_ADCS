@@ -58,8 +58,9 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
     tspan, state_0, options);
 
 % Initialize sensors
-% ss = BasicSunSensor(deg2rad(0.3), 0, calday);
-ss = BasicSunSensor(0, 0, calday);
+ss = BasicSunSensor(deg2rad(0.3), 0, calday);
+% ss = BasicSunSensor(0, 0, calday);
+mag = BasicMagSensor(deg2rad(0.3), 0, calday, gmst);
 
 % create some fictitious star unit vectors
 star1_i = [1/sqrt(2), 1/sqrt(2), 0]';
@@ -96,7 +97,8 @@ for i=1:length(t_out)
 
     % rotate into PA frame at this time step
     R_i_p = quat2dcm(state_out(i,[4 1 2 3]));
-    B_vec_p = R_i_p * B_vec_i;
+    % B_vec_p = R_i_p * B_vec_i;
+    B_vec_p = mag.get_measurement(R_i_p, state_out(i, 8:10));
     % sun_vec_p = R_i_p * sun_vec_i;
     sun_vec_p = ss.get_measurement(R_i_p);
     star1_p =  R_i_p * star1_i;
