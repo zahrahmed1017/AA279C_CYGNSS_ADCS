@@ -69,7 +69,7 @@ plot(t_hr, rad2deg(eulerAngs_noPert(:,1)), 'LineWidth', 2)
 grid on
 xlabel('Time [hr]')
 ylabel('Yaw [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 ylim([0 50])
 title('Yaw')
 
@@ -78,7 +78,7 @@ plot(t_hr, rad2deg(eulerAngs_noPert(:,2)), 'LineWidth', 2)
 grid on;
 xlabel('Time [hr]')
 ylabel('Pitch [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 ylim([-70 -40])
 title('Pitch')
 
@@ -88,7 +88,7 @@ grid on;
 xlabel('Time [hr]')
 ylabel('Roll [degrees]')
 title('Roll')
-fontsize(14,'points')
+fontsize(15,'points')
 
 %% Now include perturbations:
 
@@ -128,7 +128,7 @@ plot(t_hr, rad2deg(eulerAngs_pert(:,1)), 'LineWidth', 2)
 grid on
 xlabel('Time [hr]')
 ylabel('Yaw [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 % ylim([0 50])
 title('Yaw')
 
@@ -137,7 +137,7 @@ plot(t_hr, rad2deg(eulerAngs_pert(:,2)), 'LineWidth', 2)
 grid on;
 xlabel('Time [hr]')
 ylabel('Pitch [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 % ylim([-70 -40])
 title('Pitch')
 
@@ -147,7 +147,7 @@ grid on;
 xlabel('Time [hr]')
 ylabel('Roll [degrees]')
 title('Roll')
-fontsize(14,'points')
+fontsize(15,'points')
 
 figure()
 subplot(3,1,1)
@@ -155,7 +155,7 @@ plot(t_hr, rad2deg(eulerAngs_delta(:,1)), 'LineWidth', 2)
 grid on
 xlabel('Time [hr]')
 ylabel('\Delta [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 % ylim([0 50])
 title('Delta Yaw')
 
@@ -164,7 +164,7 @@ plot(t_hr, rad2deg(eulerAngs_delta(:,2)), 'LineWidth', 2)
 grid on;
 xlabel('Time [hr]')
 ylabel('\Delta [degrees]')
-fontsize(14,'points')
+fontsize(15,'points')
 % ylim([-70 -40])
 title('Delta Pitch')
 
@@ -174,5 +174,5 @@ grid on;
 xlabel('Time [hr]')
 ylabel('\Delta [degrees]')
 title('Delta Roll')
-fontsize(14,'points')
+fontsize(15,'points')
 
