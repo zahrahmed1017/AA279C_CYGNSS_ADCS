@@ -142,6 +142,8 @@ for i=1:length(t_out)
     DCM_est_det2 = cat(3, DCM_est_det2, R_est2);
     [yaw_est2, pitch_est2, roll_est2] = dcm2angle(R_est2, 'ZYX');
     angs_est2 = [angs_est2; yaw_est2, pitch_est2, roll_est2];
+
+    R_err = R_i_p' * R_est2;
         
 
     % q-method
