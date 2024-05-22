@@ -58,13 +58,23 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
     tspan, state_0, options);
 
 % Initialize sensors
-ss = BasicSunSensor(deg2rad(0.3), 0, calday);
+ss_noise = deg2rad(0.3);
+ss = BasicSunSensor(ss_noise, deg2rad(0.001), calday);
 % ss = BasicSunSensor(0, 0, calday);
-mag = BasicMagSensor(deg2rad(0.3), 0, calday, gmst);
+mag_noise = deg2rad(0.3);
+mag = BasicMagSensor(mag_noise, deg2rad(0.001), calday, gmst);
+
+% too lazy to implement a sensor class for star tracker -- will just add
+% noise to star vectors
+star_tracker_noise = deg2rad(0.1);
 
 % create some fictitious star unit vectors
 star1_i = [1/sqrt(2), 1/sqrt(2), 0]';
 star2_i = [0, 1, 0]';
+
+% gyro setup
+gyro_noise = deg2rad(0.2);
+% gyro_noise = 0;
 
 DCM_est_det1 = []; % this is the set of DCMs from the deterministic method w/ 3 unit vecs
 DCM_est_det2 = []; % this is the set of DCMs from the deterministic method w/ 2 unit vecs
@@ -101,8 +111,9 @@ for i=1:length(t_out)
     B_vec_p = mag.get_measurement(R_i_p, state_out(i, 8:10));
     % sun_vec_p = R_i_p * sun_vec_i;
     sun_vec_p = ss.get_measurement(R_i_p);
-    star1_p =  R_i_p * star1_i;
-    star2_p =  R_i_p * star2_i;
+
+    star1_p =  addGaussianRotNoise(R_i_p * star1_i, star_tracker_noise);
+    star2_p =  addGaussianRotNoise(R_i_p * star2_i, star_tracker_noise);
 
     % Deterministic method w/ 3 unit vectors
     % V1 = [B_vec_i, sun_vec_i, star1_i];
@@ -155,7 +166,7 @@ for i=1:length(t_out)
         
 
     % rate measurement and attitude propagation
-    w_meas = state_out(i,5:7); % no error added yet
+    w_meas = state_out(i,5:7) + randn(1,3)*gyro_noise; 
     q_dot_est = QuaternionKinematics(q_last, w_meas);
     if i < length(t_out)
         dt = t_out(i+1) - t_out(i);
@@ -170,6 +181,8 @@ for i=1:length(t_out)
     
 
 end
+
+expected_error = rad2deg(ss_noise^2 + mag_noise^2 + 2*star_tracker_noise);
 
 %% Plot everything
 
@@ -196,9 +209,15 @@ saveas(gcf, "Figures_and_Plots/PS7/AttDet_det3_basicErr.png")
 
 figure
 hold on
-plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est1(:,1)), 'b-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est1(:,2)), 'r-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est1(:,3)), 'g-', 'LineWidth', 2)
+
+err1 = angs_gt - angs_est1;
+% correct where it thinks error is ~360 deg
+err1(err1 < -pi) = err1(err1 < -pi) + 2*pi;
+err1(err1 > pi) = err1(err1 > pi) - 2*pi;
+
+plot(t_out, rad2deg(err1(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(err1(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(err1(:,3)), 'g-', 'LineWidth', 2)
 legend("Yaw error", ...
        "Pitch error", ...
        "Roll error")
@@ -232,9 +251,14 @@ saveas(gcf, "Figures_and_Plots/PS7/AttDet_det2_basicErr.png")
 
 figure
 hold on
-plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est2(:,1)), 'b-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est2(:,2)), 'r-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est2(:,3)), 'g-', 'LineWidth', 2)
+err2 = angs_gt - angs_est2;
+% correct where it thinks error is ~360 deg
+err2(err2 < -pi) = err2(err2 < -pi) + 2*pi;
+err2(err2 > pi)  = err2(err2 > pi) - 2*pi;
+
+plot(t_out, rad2deg(err2(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(err2(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(err2(:,3)), 'g-', 'LineWidth', 2)
 legend("Yaw error", ...
        "Pitch error", ...
        "Roll error")
@@ -268,9 +292,14 @@ saveas(gcf, "Figures_and_Plots/PS7/AttDet_stoc_basicErr.png")
 
 figure
 hold on
-plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est3(:,1)), 'b-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est3(:,2)), 'r-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est3(:,3)), 'g-', 'LineWidth', 2)
+err3 = angs_gt - angs_est3;
+% correct where it thinks error is ~360 deg
+err3(err3 < -pi) = err3(err3 < -pi) + 2*pi;
+err3(err3 > pi) =  err3(err3 > pi) - 2*pi;
+
+plot(t_out, rad2deg(err3(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(err3(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(err3(:,3)), 'g-', 'LineWidth', 2)
 legend("Yaw error", ...
        "Pitch error", ...
        "Roll error")
@@ -303,9 +332,14 @@ saveas(gcf, "Figures_and_Plots/PS7/AttDet_rate_basicErr.png")
 
 figure
 hold on
-plot(t_out, rad2deg(angs_gt(:,1)) - rad2deg(angs_est4(:,1)), 'b-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,2)) - rad2deg(angs_est4(:,2)), 'r-', 'LineWidth', 2)
-plot(t_out, rad2deg(angs_gt(:,3)) - rad2deg(angs_est4(:,3)), 'g-', 'LineWidth', 2)
+err4 = angs_gt - angs_est4;
+% correct where it thinks error is ~360 deg
+err4(err4 < -pi) = err4(err4 < -pi) + 2*pi;
+err4(err4 > pi) =  err4(err4 > pi) - 2*pi;
+
+plot(t_out, rad2deg(err4(:,1)), 'b-', 'LineWidth', 2)
+plot(t_out, rad2deg(err4(:,2)), 'r-', 'LineWidth', 2)
+plot(t_out, rad2deg(err4(:,3)), 'g-', 'LineWidth', 2)
 legend("Yaw error", ...
        "Pitch error", ...
        "Roll error")
