@@ -4,14 +4,16 @@ classdef MagSensor
         % for V = F*B + V0
         voltageBias % V0
         measMatrix  % F
+        voltageNoise % W
         calDay
         gmst % TODO: see if we need to increment this (does it affect our mag model?)
     end
 
     methods
-        function obj = MagSensor(voltageBias, measMatrix, calDay, gmst)
+        function obj = MagSensor(voltageBias, voltageNoise, measMatrix, calDay, gmst)
             obj.voltageBias =  voltageBias;
             obj.measMatrix = measMatrix;
+            obj.voltageNoise = voltageNoise;
             obj.calDay = calDay;
             obj.gmst = gmst;
         end
@@ -29,14 +31,19 @@ classdef MagSensor
             B_vec_p = R_i_p * B_vec_i;
 
             % predict onboard voltage
-            V = obj.measMatrix * B_vec_p + obj.voltageBias;
+            V = obj.measMatrix * B_vec_p ...
+                + obj.voltageBias ...
+                + obj.voltageNoise * randn(3,1);
+
+            % round V to nearest 100mV
+            V = round(V*100*1e6)/(100*1e6);
+
+            % Convert to B vector estimate
+            % we subtract out voltagebias becasue we know it; we can't 
+            % subtract noise bc we dont' know it
+            meas = inv(self.measMatrix)*(V - obj.voltageBias);
 
 
-            %TODO: ADC simulation
-
-            meas = B_vec_p; % for now
-
-            % TODO: increment gmst?
         end
 
     end
