@@ -1,5 +1,4 @@
 classdef MagSensor
-    % UNDER CONSTRUCTION
     properties
         % for V = F*B + V0
         voltageBias % V0
@@ -41,7 +40,7 @@ classdef MagSensor
             % Convert to B vector estimate
             % we subtract out voltagebias becasue we know it; we can't 
             % subtract noise bc we dont' know it
-            meas = inv(self.measMatrix)*(V - obj.voltageBias);
+            meas = inv(obj.measMatrix)*(V - obj.voltageBias);
 
 
         end

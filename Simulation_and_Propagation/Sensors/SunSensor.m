@@ -1,5 +1,5 @@
 classdef SunSensor
-    % In progress, not sure I'll finish
+    
     properties
         angNoise
         angQuant
@@ -8,7 +8,7 @@ classdef SunSensor
     end
 
     methods
-        function obj = SunSensor(angNoise, angQuant calDay)
+        function obj = SunSensor(angNoise, angQuant, calDay)
             obj.angNoise =  angNoise;
             obj.angQuant = angQuant;
             obj.calDay = calDay;
@@ -54,7 +54,7 @@ classdef SunSensor
             if dot(meas, sun_vec_p) < 0
                 meas = - meas;
             end
-            
+
         end
 
     end
