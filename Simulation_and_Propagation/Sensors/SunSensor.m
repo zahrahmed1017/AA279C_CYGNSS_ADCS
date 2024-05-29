@@ -36,7 +36,7 @@ classdef SunSensor
             x = z * sun_vec_p(1) / sun_vec_p(3);
 
             phi = atan2(x, z);
-            theta = atan( (h*sqrt(x^2 + z^2)) / sqrt(h^2 - (n^2-1)*(x^2+z^2) )  );
+            theta = atan2( (n*sqrt(x^2 + z^2)) , sqrt(h^2 - (n^2-1)*(x^2+z^2) )  );
           
             % add some noise, then quantize
             phi = phi + randn(1)*obj.angNoise;
@@ -51,9 +51,18 @@ classdef SunSensor
             meas = (1 / sqrt(1 + tan_a^2 + tan_b^2)) * [tan_a; 1; tan_b];
 
             % check that the sign is right
-            if dot(meas, sun_vec_p) < 0
-                meas = - meas;
+            % if dot(meas, sun_vec_p) < 0
+            %     meas = - meas;
+            % end
+
+            % check sign for each component
+            % assume low enough error that this is ok
+            for comp=1:3
+                if sign(meas(comp)) ~= sign(sun_vec_p(comp))
+                    meas(comp) = - meas(comp);
+                end
             end
+
 
         end
 

@@ -72,6 +72,12 @@ mag = MagSensor(mag_v_bias, mag_v_noise, mag_F_matrix, calday, gmst);
 
 %% Get sensor measurements for each time step and compare to ground truth
 
+gt_sun_vecs = [];
+meas_sun_vecs = [];
+
+gt_mag_vecs = [];
+meas_mag_vecs = [];
+
 for i=1:length(t_out)
     
     [~,B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i,8:10),calday, gmst);
@@ -85,11 +91,20 @@ for i=1:length(t_out)
     B_vec_p = R_i_p * B_vec_i; % ground truth body frame B vector
     sun_vec_p = R_i_p * sun_vec_i; % ground truth body frame sun vector
 
+    gt_sun_vecs = [gt_sun_vecs sun_vec_p];
+    gt_mag_vecs = [gt_mag_vecs B_vec_p];
+
     B_meas = mag.get_measurement(R_i_p, state_out(i,8:10));
 
     sun_meas = ss.get_measurement(R_i_p);
 
+    meas_sun_vecs = [meas_sun_vecs sun_meas];
+    meas_mag_vecs = [meas_mag_vecs B_meas];
 
 
 end
 
+figure
+hold on
+plot(t_out,   gt_sun_vecs(1,:), 'kx')
+plot(t_out, meas_sun_vecs(1,:), 'bo')
