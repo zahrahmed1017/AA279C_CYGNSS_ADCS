@@ -20,7 +20,7 @@ classdef MEKF
     end
 
 
-    methods (Access = public)
+    methods 
         %%% Constructor
         function obj = MEKF(initialState, initialStateCov, initialProcessNoise, dt, I)
 
@@ -115,35 +115,32 @@ classdef MEKF
 
         end
 
-        function obj = UpdateSTM(obj)
+        %%% Get Methods:
+        function stm = get.STM(obj)
         
-            obj.UpdateA11();
-            obj.UpdateA12();
-            obj.UpdateA22();
-
-            obj.STM = [obj.A11, obj.A12; ...
+            stm = [obj.A11, obj.A12; ...
                        zeros(3,3), obj.A22];
 
         end 
 
-        function obj = UpdateA11(obj)
+        function a11 = get.A11(obj)
             
             if size(obj.errorState,2) ~= 1
                 obj.errorState = obj.errorState';
             end
 
             wx = crossMatrix(obj.errorState(4:6));
-            obj.A11 = eye(3,3) + (1/2) * obj.dt .* wx ; 
+            a11 = eye(3,3) + (1/2) * obj.dt .* wx ; 
 
         end
 
-        function obj = UpdateA12(obj)
+        function a12 = get.A12(obj)
             
-            obj.A12 = (1/4) * obj.dt .* eye(3,3);
+            a12 = (1/4) * obj.dt .* eye(3,3);
 
         end
 
-        function obj = UpdateA22(obj)
+        function a22 = get.A22(obj)
             
             Ix = obj.I(1,1);
             Iy = obj.I(2,2);
@@ -155,10 +152,11 @@ classdef MEKF
             eulEqLin = [ 0,                 (Iy - Iz)/Ix * wx, (Iy - Iz)/Ix * wy;...
                         (Iz - Ix)/Iy * wz,   0,                (Iz - Ix)/Iy * wx;...
                         (Ix - Iy)/Iz * wy,   (Ix - Iy)/Iz * wx, 0];
-            obj.A22  = eye(3,3) + obj.dt .* eulEqLin; 
+            a22  = eye(3,3) + obj.dt .* eulEqLin; 
 
         end
 
+        %%% Helper Functions
         function vx = crossMatrix(v)
             % v is a 3x1 column matrix
             % outputs the [vx] matrix
