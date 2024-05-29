@@ -111,9 +111,14 @@ end
 % plot(t_out, meas_sun_vecs(1,:), 'bo')
 
 % estimate covariance
-all_meas =[ meas_sun_vecs; meas_mag_vecs];
-all_gt = [gt_sun_vecs; gt_mag_vecs];
-all_err = all_meas - all_gt;
-meas_cov = cov(all_err');
+% all_meas =[ meas_sun_vecs; meas_mag_vecs];
+% all_gt = [gt_sun_vecs; gt_mag_vecs];
+% all_err = all_meas - all_gt;
+meas_cov = zeros(6,6);
+sun_err = meas_sun_vecs - gt_sun_vecs;
+mag_err = meas_mag_vecs - gt_mag_vecs;
 
+
+meas_cov(1:3, 1:3) = cov(sun_err');
+meas_cov(4:6, 4:6) = cov(mag_err');
 save('NavigationFilter/measurementCov.mat', "meas_cov")
