@@ -30,7 +30,7 @@ q_0   = [e(1)*sin(p/2);
          cos(p/2)];
 dcm_0 = quat2dcm(q_0([4 1 2 3])');
 % Initial angular velocity:
-w_0         = [deg2rad(1), deg2rad(1), deg2rad(2)]';
+w_0         = [deg2rad(3), deg2rad(3), deg2rad(3)]';
 
 
 %%%% Initial Epoch for Testing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -42,7 +42,7 @@ gmst         = CAL2GMST(initialEpoch(1),initialEpoch(2), initialEpoch(3), fracti
 
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 0.25;
+numPeriods  = 1;
 tspan       = 0 : 1 : T * numPeriods; % simulate once an minute?
 
 % propagate orbit (no perturbations for now)
@@ -104,7 +104,16 @@ for i=1:length(t_out)
 
 end
 
-figure
-hold on
-plot(t_out,   gt_sun_vecs(1,:), 'kx')
-plot(t_out, meas_sun_vecs(1,:), 'bo')
+% sanity check: do the measurements roughly match?
+% figure
+% hold on
+% plot(t_out,   gt_sun_vecs(1,:), 'kx')
+% plot(t_out, meas_sun_vecs(1,:), 'bo')
+
+% estimate covariance
+all_meas =[ meas_sun_vecs; meas_mag_vecs];
+all_gt = [gt_sun_vecs; gt_mag_vecs];
+all_err = all_meas - all_gt;
+meas_cov = cov(all_err');
+
+save('NavigationFilter/measurementCov.mat', "meas_cov")
