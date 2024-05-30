@@ -24,7 +24,7 @@ classdef MagSensor
             
             % original vector measurement in inertial frame
             [~,B_norm, B_vec_i] = CalculateMagneticTorque(pos, obj.calDay, obj.gmst);
-            B_vec_i = B_vec_i/norm(B_vec_i);
+            % B_vec_i = B_vec_i/norm(B_vec_i);
 
             % rotate into body-fixed frame
             B_vec_p = R_i_p * B_vec_i;
@@ -41,6 +41,8 @@ classdef MagSensor
             % we subtract out voltagebias becasue we know it; we can't 
             % subtract noise bc we dont' know it
             meas = inv(obj.measMatrix)*(V - obj.voltageBias);
+
+            meas = meas / norm(meas);
 
 
         end
