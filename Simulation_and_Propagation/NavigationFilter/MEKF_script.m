@@ -1,6 +1,7 @@
 clear;
 load("InertiaData.mat")
 load("cygnss.mat")
+load("measurementCov.mat")
 
 %% Ground Truth Orbit/Attitude Propagation for Sensor Measurements
 
@@ -40,16 +41,16 @@ gmst         = CAL2GMST(initialEpoch(1),initialEpoch(2), initialEpoch(3), fracti
 
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 0.25;
-dt          = 5; %seconds
+numPeriods  = 0.1;
+dt          = 2; %seconds
 tspan       = 0 : dt : T * numPeriods; % 
 
 % propagate orbit (no perturbations for now)
-state_0   = [q_0; w_0; rv_state];
-gravityGrad = 0;
-magTorque   = 0;
-aeroDrag    = 0;
-SRP         = 0;
+state_0     = [q_0; w_0; rv_state];
+gravityGrad = 1;
+magTorque   = 1;
+aeroDrag    = 1;
+SRP         = 1;
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 [t_out, state_out] = ...
@@ -84,12 +85,13 @@ mag_F_matrix   = 1e5 * eye(3); % V/T
 mag            = MagSensor(mag_v_bias, mag_v_noise, mag_F_matrix, calday, gmst);
 
 % Initialize measurement covariance
-measCov        = [ss_ang_noise^2, 0,          0,          0,               0,               0;...
-                  0,          ss_ang_noise^2, 0,          0,               0,               0;...
-                  0,          0,          ss_ang_noise^2, 0,               0,               0;...
-                  0,          0,          0,              mag_v_noise^2,   0,               0;...
-                  0,          0,          0,              0,               mag_v_noise^2,   0;...
-                  0,          0,          0,              0,               0,               mag_v_noise^2];
+measCov = meas_cov;
+% measCov        = [ss_ang_noise^2, 0,          0,          0,               0,               0;...
+%                   0,          ss_ang_noise^2, 0,          0,               0,               0;...
+%                   0,          0,          ss_ang_noise^2, 0,               0,               0;...
+%                   0,          0,          0,              mag_v_noise^2,   0,               0;...
+%                   0,          0,          0,              0,               mag_v_noise^2,   0;...
+%                   0,          0,          0,              0,               0,               mag_v_noise^2];
 % dt = 5; %seconds
 % tspan = 0:dt:1000;
 % filter = MEKF(state_0, cov_0, processNoise_0, dt, I_p);
@@ -97,10 +99,11 @@ measCov        = [ss_ang_noise^2, 0,          0,          0,               0,   
 %% Run Filter 
 
 q_mekf      = zeros(length(tspan), 4);
+mrp_mekf    = zeros(length(tspan), 3);
 meas_mekf   = zeros(length(tspan), 6);
 model_mekf  = zeros(length(tspan), 6);
 prefit_err  = zeros(length(tspan), 6);
-postfit_err = zeros(legnth(tspan), 6);
+postfit_err = zeros(length(tspan), 6);
 cov_mekf    = zeros(length(tspan), 3);
 
 if size(state_0,2) ~= 1
@@ -187,6 +190,7 @@ for i = 1:length(tspan)
    sun_meas = ss.get_measurement(R_i_p);
    mag_meas = mag.get_measurement(R_i_p, state_out(i,8:10));
    y        = [sun_meas; mag_meas];
+   meas_mekf(i,:) = y';
 
    %%% Get modeled measurements - 3n x 1 vector where n is the number of
    %%% measurements
@@ -195,12 +199,16 @@ for i = 1:length(tspan)
 
    [sun_vec_i, ~] = CalculateSunPositionECI(calday);
    sun_vec_i = sun_vec_i/norm(sun_vec_i);
-   [~,B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i,8:10),calday, gmst);
+   [~, B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i,8:10),calday, gmst);
    B_vec_i = B_vec_i/norm(B_vec_i);
 
    z1 = R_est * sun_vec_i; % Sun sensor modeled measurement
    z2 = R_est * B_vec_i; % Magnetometer modeled measurement
    z  = [z1; z2];
+   model_mekf(i,:) = z';
+
+   %%% PRE-FIT RESIDUALS %%%%%%%%%
+   prefit_err(i,:) = y' - z';
 
    %%% Calculate Sensitivity Matrix - 3n x 6 
    z1x = crossMatrix(z1);
@@ -214,6 +222,7 @@ for i = 1:length(tspan)
 
    %%% Update state
    obj.errorState = obj.errorState + K_t*(y - z);
+   mrp_mekf(i,:)  = obj.errorState(1:3)';
 
    %%% Update covariance 
    obj.stateCov   = ((eye(6,6) - K_t * H)* obj.stateCov * (eye(6,6) - K_t * H)') + ...
@@ -229,6 +238,21 @@ for i = 1:length(tspan)
     obj.state(1:4) = q_new / norm(q_new);
     obj.state(5:7) = obj.errorState(4:6);
     q_mekf(i, :)   = obj.state(1:4)';  
+
+   %%%%%%%%%%%%% POST-FIT RESIDUAL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   quat_est = obj.state(1:4)';
+   R_est    = quat2dcm(quat_est([4 1 2 3]));
+
+   [sun_vec_i, ~] = CalculateSunPositionECI(calday);
+   sun_vec_i = sun_vec_i/norm(sun_vec_i);
+   [~,B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i,8:10),calday, gmst);
+   B_vec_i = B_vec_i/norm(B_vec_i);
+
+   z1_post = R_est * sun_vec_i; % Sun sensor modeled measurement
+   z2_post = R_est * B_vec_i; % Magnetometer modeled measurement
+   z_post  = [z1_post; z2_post];
+
+   postfit_err(i,:) = y' - z_post';
 
 end
 
@@ -301,13 +325,16 @@ xlabel('Time [s]')
 % title("MEKF quaternions")
 
 %% Plot covariance errors
-n = 50;
+n = length(tspan);
+
 figure()
 subplot(3,1,1)
-plot(tspan(1:n), cov_mekf(1:n,1), 'LineWidth', 2)
+plot(tspan, cov_mekf(:,1), 'LineWidth', 2)
 hold on;
 grid on;
-plot(tspan(1:n), -cov_mekf(1:n,1), 'LineWidth', 2)
+plot(tspan, -cov_mekf(:,1),  'LineWidth', 2)
+plot(tspan, mrp_mekf(:,1), 'LineWidth', 2)
+legend('+\sigma', '-\sigma', 'p1')
 xlabel('Time [s]')
 ylabel('\sigma_{P1}')
 fontsize(15,'points')
@@ -316,7 +343,9 @@ subplot(3,1,2)
 plot(tspan(1:n), cov_mekf(1:n,2), 'LineWidth', 2)
 hold on;
 grid on;
-plot(tspan(1:n), -cov_mekf(1:n,2), 'LineWidth', 2)
+plot(tspan(1:n), -cov_mekf(1:n,2), '-r', 'LineWidth', 2)
+plot(tspan(1:n), mrp_mekf(1:n,2), 'LineWidth', 2)
+legend('+\sigma', '-\sigma', 'p2')
 xlabel('Time [s]')
 ylabel('\sigma_{P2}')
 fontsize(15,'points')
@@ -326,7 +355,72 @@ plot(tspan(1:n), cov_mekf(1:n,3), 'LineWidth', 2)
 hold on;
 grid on;
 plot(tspan(1:n), -cov_mekf(1:n,3), 'LineWidth', 2)
+plot(tspan(1:n), mrp_mekf(1:n,3), 'LineWidth', 2)
+legend('+\sigma', '-\sigma', 'p3')
 xlabel('Time [s]')
 ylabel('\sigma_{P3}')
 fontsize(15,'points')
+
+%% Plot pre-fit and post-fit residuals:
+
+figure()
+subplot(3,2,1)
+plot(tspan, prefit_err(:,1), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,1), 'LineWidth', 2)
+title('Error Sun-sensor x-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
+
+subplot(3,2,3)
+plot(tspan, prefit_err(:,2), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,2), 'LineWidth', 2)
+title('Error Sun-sensor y-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
+
+subplot(3,2,5)
+plot(tspan, prefit_err(:,3), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,3), 'LineWidth', 2)
+title('Error Sun-sensor z-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
+
+subplot(3,2,2)
+plot(tspan, prefit_err(:,4), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,4), 'LineWidth', 2)
+title('Error Magnetometer x-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
+
+subplot(3,2,4)
+plot(tspan, prefit_err(:,5), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,5), 'LineWidth', 2)
+title('Error Magnetometer y-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
+
+subplot(3,2,6)
+plot(tspan, prefit_err(:,6), 'LineWidth', 2)
+hold on;
+plot(tspan, postfit_err(:,6), 'LineWidth', 2)
+title('Error Magnetometer z-component')
+legend('Prefit Residual', 'Postfit Residual')
+fontsize(15,'points')
+xlabel('Time [sec]')
+ylabel('Residual [rad]')
 
