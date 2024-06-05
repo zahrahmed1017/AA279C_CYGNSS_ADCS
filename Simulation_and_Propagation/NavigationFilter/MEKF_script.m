@@ -1,3 +1,4 @@
+close all;
 clear;
 load("InertiaData.mat")
 load("cygnss.mat")
@@ -47,10 +48,10 @@ tspan       = 0 : dt : T * numPeriods; %
 
 % propagate orbit (no perturbations for now)
 state_0     = [q_0; w_0; rv_state];
-gravityGrad = 0;
-magTorque   = 0;
-aeroDrag    = 0;
-SRP         = 0;
+gravityGrad = 1;
+magTorque   = 1;
+aeroDrag    = 1;
+SRP         = 1;
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 [t_out, state_out] = ...
@@ -64,30 +65,64 @@ options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
 
 % Initial State and Covariance
 state_0        = [q_0; w_0];
+
 cov_0          = [1e-3, 0,    0,    0,    0,    0;...
                    0,    1e-3, 0,    0,    0,    0;...
                    0,    0,    1e-3, 0,    0,    0;...
-                   0,    0,    0,    1e-6^2,0,   0;...
-                   0,    0,    0,    0,    1e-6^2,0;...
-                   0,    0,    0,    0,    0,     1e-6^2];
-% cov_0 = eye(6,6);
+                   0,    0,    0,    1e-12,0,   0;...
+                   0,    0,    0,    0,    1e-12,0;...
+                   0,    0,    0,    0,    0,     1e-12];
+cov_0 = cov_0 * 50;
+
+
+% cov_0 = eye(6,6) * 0.1;
+
+%% Adding noise to initial state estimate (rate and ref. quaternion)
+
+state_0(5:7)        = state_0(5:7) + cov_0(4:6, 4:6) * randn(3,1);
+
+init_err_mrp        = cov_0(1:3, 1:3) * randn(3,1); 
+init_ref_quat       = quatMul(state_0(1:4), mrp2quat(init_err_mrp));
+state_0(1:4)        = init_ref_quat;
+
+
 % Initial Process Noise 
 % processNoise_0 = cov_0./100;
-processNoise_0 = cov_0/100;
+% processNoise_0 = cov_0/100;
+processNoise_0 = [1e-3, 0,    0,    0,    0,    0;...
+                   0,    1e-3, 0,    0,    0,    0;...
+                   0,    0,    1e-3, 0,    0,    0;...
+                   0,    0,    0,    1e-12,0,   0;...
+                   0,    0,    0,    0,    1e-12,0;...
+                   0,    0,    0,    0,    0,     1e-12] ;
+
+
 
 % Initialize Sun Sensor
 ss_ang_noise   = deg2rad(0.1); % 1 sigma
+% ss_ang_noise   = deg2rad(1); % 1 sigma
 ss_ang_quant   = deg2rad(0.125);
 ss             = SunSensor(ss_ang_noise, ss_ang_quant, calday);
+% For debug: use a basic sensor model
+ss_noise_simple = deg2rad(1);
 
 % Initialize Magnetometer
 mag_v_bias     = [0, 0, 0]'; % init as zero because we assume good calibration
 mag_v_noise    = 0.025; % volts
 mag_F_matrix   = 1e5 * eye(3); % V/T
 mag            = MagSensor(mag_v_bias, mag_v_noise, mag_F_matrix, calday, gmst);
+mag_noise_simple = deg2rad(1);
 
 % Initialize measurement covariance
+
+% try: tweaking the measurement covariance (esp. for magnetometer)
+% not really helping so far
+meas_cov = eye(6);
+meas_cov(1:3, 1:3) = meas_cov(1:3, 1:3) * ss_noise_simple;
+meas_cov(4:6, 4:6) = meas_cov(4:6, 4:6) * mag_noise_simple;
+
 measCov = meas_cov;
+
 % measCov        = [ss_ang_noise^2, 0,          0,          0,               0,               0;...
 %                   0,          ss_ang_noise^2, 0,          0,               0,               0;...
 %                   0,          0,          ss_ang_noise^2, 0,               0,               0;...
@@ -97,6 +132,7 @@ measCov = meas_cov;
 % dt = 5; %seconds
 % tspan = 0:dt:1000;
 % filter = MEKF(state_0, cov_0, processNoise_0, dt, I_p);
+
 
 %% Run Filter 
 
@@ -192,21 +228,31 @@ for i = 1:length(tspan)-1
    %%% Get true measurements - 3n x 1 vector where n is the number of
    %%% measurements
    R_i_p    = quat2dcm(state_out(i+1,[4 1 2 3])); % Ground truth attitude
-   sun_meas = ss.get_measurement(R_i_p); 
-   mag_meas = mag.get_measurement(R_i_p, state_out(i+1,8:10));
-   y        = [sun_meas; mag_meas];
-   meas_mekf(i,:) = y';
+
+   % % % commenting these out for now, doing simple model instead
+   % sun_meas = ss.get_measurement(R_i_p); 
+   % mag_meas = mag.get_measurement(R_i_p, state_out(i+1,8:10));
+   % y        = [sun_meas; mag_meas];
+   % meas_mekf(i,:) = y';
 
    %%% Get modeled measurements - 3n x 1 vector where n is the number of
    %%% measurements
    quat_est = obj.state(1:4)';
-   % R_est    = quat2dcm(quat_est([4 1 2 3]));
-   R_est = quat2dcm(state_out(i+1, [4 1 2 3]));
+   R_est    = quat2dcm(quat_est([4 1 2 3]));
+   % R_est = quat2dcm(state_out(i+1, [4 1 2 3]));
 
    [sun_vec_i, ~]       = CalculateSunPositionECI(calday);
    sun_vec_i            = sun_vec_i/norm(sun_vec_i);
    [~, B_norm, B_vec_i] = CalculateMagneticTorque(state_out(i+1,8:10),calday, gmst);
    B_vec_i              = B_vec_i/norm(B_vec_i);
+
+   % for SIMPLE measurement simulation
+   sun_meas = (-crossMatrix(randn(3,1)*ss_noise_simple) + eye(3)) * (R_i_p *sun_vec_i) ;
+   sun_meas = sun_meas / norm(sun_meas);
+   mag_meas = (-crossMatrix(randn(3,1)*mag_noise_simple) + eye(3)) * (R_i_p * B_vec_i) ;
+   mag_meas = mag_meas / norm(mag_meas);
+   y        = [sun_meas; mag_meas];
+   meas_mekf(i,:) = y';
 
    z1 = R_est * sun_vec_i; % Sun sensor modeled measurement
    z2 = R_est * B_vec_i; % Magnetometer modeled measurement
@@ -245,7 +291,8 @@ for i = 1:length(tspan)-1
     q_old             = obj.state(1:4); % scalar last here
     errState_quat     = mrp2quat(obj.errorState(1:3));
     % errState_quat     = [obj.errorState(1:3)/2; 1];
-    q_new             = quatMul(errState_quat, q_old);
+    % q_new             = quatMul(errState_quat, q_old);
+    q_new             = quatMul(q_old, errState_quat);
     obj.state(1:4)    = q_new / norm(q_new);
     obj.state(5:7)    = obj.errorState(4:6);
     q_mekf(i, :)      = obj.state(1:4)';  
@@ -300,7 +347,7 @@ plot(t_q, q_mekf(:,4),  'LineWidth', 2)
 grid on;
 plot(t_q, sqrt(q_mekf(:,1).^2 + q_mekf(:,2).^2 + q_mekf(:,3).^2 + q_mekf(:,4).^2), 'LineWidth', 2)
 legend("q_1", "q_2", "q_3", "q_4", "q_{mag}")
-ylim([-1.5 1.5])
+ylim([-1 1])
 fontsize(15,'points')
 title("MEKF quaternions")
 xlabel('Time [s]')
@@ -401,9 +448,9 @@ fontsize(15,'points')
 
 figure()
 subplot(3,2,1)
-plot(tspan, prefit_err(:,1), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,1)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,1), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,1)), 'LineWidth', 2)
 title('Error Sun-sensor x-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')
@@ -411,9 +458,9 @@ xlabel('Time [sec]')
 ylabel('Residual [rad]')
 
 subplot(3,2,3)
-plot(tspan, prefit_err(:,2), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,2)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,2), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,2)), 'LineWidth', 2)
 title('Error Sun-sensor y-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')
@@ -421,9 +468,9 @@ xlabel('Time [sec]')
 ylabel('Residual [rad]')
 
 subplot(3,2,5)
-plot(tspan, prefit_err(:,3), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,3)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,3), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,3)), 'LineWidth', 2)
 title('Error Sun-sensor z-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')
@@ -431,9 +478,9 @@ xlabel('Time [sec]')
 ylabel('Residual [rad]')
 
 subplot(3,2,2)
-plot(tspan, prefit_err(:,4), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,4)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,4), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,4)), 'LineWidth', 2)
 title('Error Magnetometer x-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')
@@ -441,9 +488,9 @@ xlabel('Time [sec]')
 ylabel('Residual [rad]')
 
 subplot(3,2,4)
-plot(tspan, prefit_err(:,5), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,5)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,5), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,5)), 'LineWidth', 2)
 title('Error Magnetometer y-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')
@@ -451,9 +498,9 @@ xlabel('Time [sec]')
 ylabel('Residual [rad]')
 
 subplot(3,2,6)
-plot(tspan, prefit_err(:,6), 'LineWidth', 2)
+plot(tspan, abs(prefit_err(:,6)), 'LineWidth', 2)
 hold on;
-plot(tspan, postfit_err(:,6), 'LineWidth', 2)
+plot(tspan, abs(postfit_err(:,6)), 'LineWidth', 2)
 title('Error Magnetometer z-component')
 legend('Prefit Residual', 'Postfit Residual')
 fontsize(15,'points')

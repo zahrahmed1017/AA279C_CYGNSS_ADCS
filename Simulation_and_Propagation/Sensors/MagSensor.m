@@ -43,8 +43,6 @@ classdef MagSensor
             meas = inv(obj.measMatrix)*(V - obj.voltageBias);
 
             meas = meas / norm(meas);
-
-
         end
 
     end
