@@ -19,7 +19,12 @@ gmst        = CAL2GMST(initialEpoch(1), initialEpoch(2), initialEpoch(3), fracti
 
 % Calculate control torque
 %%%% TO DO: ADD CONTROL TORQUE FUNCTION HERE %%%%%%%%%%%%
-Mcontrol = Controller();
+
+% small angle approx. of angle error -- assume target attitude is [0 0 0 1]
+% this means the current attitude IS the error!
+% for now, assume perfect attitude knowledge
+control_angs = [R_i_pa(2,3), -R_i_pa(1,3), R_i_pa(1,2)]'; % assume a 3-2-1 rotation
+Mcontrol = controlTorque_inertial(I_p, control_angs, w);
 
 % Calculate Actuator Torque
 actuatorTorque_pa = [0;0;0];
