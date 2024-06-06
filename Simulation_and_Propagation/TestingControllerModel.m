@@ -35,14 +35,15 @@ A_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
 
 % Arbitrary initial attitude, for inertial pointing
 q_0 = [0, 0, 0, 1]';
-w_0 = deg2rad([2, 2, 5]');
+w_0 = deg2rad([0.5, 0.1, 1]');
 
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 0.5;
-% t_span       = 0 : 10 : T * numPeriods; % simulate once an minute?
-t_span      = 0:0.5:200;
+% numPeriods  = 0.5;
+numPeriods = 0.1;
+t_span       = 0 : .5 : T * numPeriods; % simulate once an minute?
+% t_span      = 0:0.5:200;
 
 %%%% INITIALIZE EPOCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 initialEpoch = [2016, 12, 16];
@@ -96,6 +97,7 @@ for ii = 1:length(t_out)
 
     
     control_angs = [R_i_p(2,3), -R_i_p(1,3), R_i_p(1,2)]'; % assume a 3-2-1 rotation
+    % control_angs = [ax; ay; az]; % should get same result as above
     Mc    = controlTorque_inertial(I_p, control_angs, w);
 
     Mact = ComputeActuatorTorque(Lwi, Mc, wi, A, Astar)';

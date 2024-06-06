@@ -62,7 +62,8 @@ if SRP
 end
 
 % Total External Torque:
-M_ext = actuatorTorque_pa + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa; 
+% M_ext = actuatorTorque_pa + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa; 
+M_ext = -Mcontrol + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa; 
 
 % Propagate the orbit:
 orbit_dot = PropagateOrbit(rv, mu);

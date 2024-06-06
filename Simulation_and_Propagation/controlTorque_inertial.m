@@ -5,11 +5,15 @@ function Mc = controlTorque_inertial_ver1(I_p, a, a_dot)
 
 % Mc = I * w_dot;
 
-f = 1/10;
+f = 1/20;
 
-kp = (f^2) / I_p(3,3);
-kd = 2*sqrt(I_p(3,3) * kp); % zeta = 1
+k_p = zeros(3,1);
+k_d = zeros(3,1);
 
-Mc =  5*kp*a + kd*a_dot;
+for i=1:3
+    k_p(i) = (f^2) / I_p(i,i);
+    k_d(i) = 2*sqrt(I_p(i,i) * k_p(i)); % zeta = 1
+
+Mc =  k_p.*a + k_d.*a_dot;
 
 end
