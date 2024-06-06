@@ -85,41 +85,41 @@ for ii = 1:length(t_out)
 
 end
 
-t_hr = t_out/60;
+t_min = t_out/60;
 
 figure()
-plot(t_hr, Mcontrol(:,1), 'LineWidth', 2)
+plot(t_min, Mcontrol(:,1), 'LineWidth', 2)
 grid on;
 hold on;
-plot(t_hr, Mcontrol(:,2), 'LineWidth', 2);
-plot(t_hr, Mcontrol(:,3), 'LineWidth', 2);
-xlabel('Time [hours]')
+plot(t_min, Mcontrol(:,2), 'LineWidth', 2);
+plot(t_min, Mcontrol(:,3), 'LineWidth', 2);
+xlabel('Time [min]')
 ylabel('Control Torque')
 title('Input Control Torque')
 legend('Mx', 'My', 'Mz')
 fontsize(14,'points')
 
 figure()
-plot(t_hr, Mact_rot(:,1), 'LineWidth', 2);
+plot(t_min, Mact_rot(:,1), 'LineWidth', 2);
 hold on;
 grid on;
-plot(t_hr, Mact_rot(:,2), 'LineWidth', 2);
-plot(t_hr, Mact_rot(:,3), 'LineWidth', 2);
+plot(t_min, Mact_rot(:,2), 'LineWidth', 2);
+plot(t_min, Mact_rot(:,3), 'LineWidth', 2);
 legend('M_{x,a}', 'M_{y,a}', 'M_{z,a}')
 fontsize(14, 'points')
-xlabel('Time [hours]')
+xlabel('Time [min]')
 ylabel('Actuator Torque')
 title('Actuator Torque')
 
 figure()
-plot(t_hr, Mactuator(:,1), 'LineWidth', 2);
+plot(t_min, Mactuator(:,1), 'LineWidth', 2);
 hold on;
 grid on;
-plot(t_hr, Mactuator(:,2), 'LineWidth', 2);
-plot(t_hr, Mactuator(:,3), 'LineWidth', 2);
+plot(t_min, Mactuator(:,2), 'LineWidth', 2);
+plot(t_min, Mactuator(:,3), 'LineWidth', 2);
 legend('M_{1,a}', 'M_{2,a}', 'M_{3,a}')
 fontsize(14, 'points')
-xlabel('Time [hours]')
+xlabel('Time [min]')
 ylabel('Actuator Torque')
 title('Actuator Torque')
 

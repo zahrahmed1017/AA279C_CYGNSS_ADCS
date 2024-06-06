@@ -14,6 +14,7 @@ Mc = [M1; M2; M3];
 
 % M_actuator torque M_vec = actuator torque
 Lw_d = ComputeActuatorTorque(Lw, Mc, w, A, Astar);
+Lw_pa = A * Lw_d;
 
 % Propagate Kinematics
 q_d = QuaternionKinematics(q,w);
