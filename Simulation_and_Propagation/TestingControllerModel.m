@@ -64,11 +64,11 @@ timeStep = .5;
 state_0 = [q_0; w_0; rv_state; Lw_0];
 M_vec = [0;0;0];
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-gravityGrad = 0;
-magTorque = 0;
-aeroDrag = 0;
-SRP = 0;
-control = 1;
+gravityGrad     = 0;
+magTorque       = 0;
+aeroDrag        = 0;
+SRP             = 0;
+control         = 1;
 [t_out, state_out] = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state, I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control ), t_span, state_0, options);
 
 
@@ -78,17 +78,23 @@ Mactuator = zeros(length(t_out), 3);
 Mact_rot  = zeros(length(t_out), 3); 
 
 all_angs = zeros(length(t_out), 3); 
+all_rates = zeros(length(t_out), 3); 
 
 for ii = 1:length(t_out)
     
     ti  = t_out(ii);
+    qi  = state_out(ii, 1:4)';
     wi  = state_out(ii, 5:7)';
-    Lwi = state_out(ii, 8:10)';
+    Lwi = state_out(ii, 14:16)';
 
-    R_i_p = quat2dcm(state_out(ii,[4 1 2 3]) );
+    R_i_p = quat2dcm(qi([4 1 2 3])' );
 
     [az, ay, ax] = quat2angle( state_out(ii,[4 1 2 3]), 'ZYX' );
     all_angs(ii, :) = [ax, ay, az];
+
+    all_rates(ii, :) = wi;
+
+
     
     % M1 = sin(0.1*ti);
     % M2 = sin(0.2*ti);
@@ -96,9 +102,9 @@ for ii = 1:length(t_out)
     % Mc = [M1; M2; M3];
 
     
-    control_angs = [R_i_p(2,3), -R_i_p(1,3), R_i_p(1,2)]'; % assume a 3-2-1 rotation
-    % control_angs = [ax; ay; az]; % should get same result as above
-    Mc    = controlTorque_inertial(I_p, control_angs, w);
+    % control_angs = [R_i_p(2,3), -R_i_p(1,3), R_i_p(1,2)]'; % assume a 3-2-1 rotation
+    control_angs = [ax; ay; az]; % should get same result as above
+    Mc    = controlTorque_inertial(I_p, control_angs, wi);
 
     Mact = ComputeActuatorTorque(Lwi, Mc, wi, A, Astar)';
     Mrot = A*Mact';
@@ -195,6 +201,7 @@ fontsize(14,'points')
 
 figure 
 hold on
+grid on
 plot(t_out/3600, rad2deg(all_angs(:,1)), 'LineWidth', 2 )
 plot(t_out/3600, rad2deg(all_angs(:,2)), 'LineWidth', 2 )
 plot(t_out/3600, rad2deg(all_angs(:,3)), 'LineWidth', 2 )
@@ -202,3 +209,14 @@ legend("X rotation", "Y rotation", "Z rotation")
 ylabel("Euler angle, degrees")
 xlabel("Time, hours")
 title("Attitude, Euler angles")
+
+figure 
+hold on
+grid on
+plot(t_out/3600, rad2deg(all_rates(:,1)), 'LineWidth', 2 )
+plot(t_out/3600, rad2deg(all_rates(:,2)), 'LineWidth', 2 )
+plot(t_out/3600, rad2deg(all_rates(:,3)), 'LineWidth', 2 )
+legend("X rate", "Y rate", "Z rate")
+ylabel("Body rates, degrees/s")
+xlabel("Time, hours")
+title("Rates")
