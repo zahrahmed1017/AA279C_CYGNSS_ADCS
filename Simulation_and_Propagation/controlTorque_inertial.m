@@ -6,7 +6,7 @@ function Mc = controlTorque_inertial(I_p, a, a_dot)
 % Mc = I * w_dot;
 
 % f = 1/20;
-f = 1/10;
+f = 1/20;
 
 k_p = zeros(3,1);
 k_d = zeros(3,1);
