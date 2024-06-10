@@ -20,7 +20,7 @@ muE = 398600;       % [km^3/s^2]
 
 % Calculate ECI and RTN position and velocity for orbit propagation 
 oe          = [a; e; i; O; w; v];
-rv_state       = OE2ECI(oe, muE);
+rv_state    = OE2ECI(oe, muE);
 RTNout      = rv2rtn(rv_state');
 A_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
 
@@ -94,20 +94,17 @@ for ii = 1:length(t_out)
 
     all_rates(ii, :) = wi;
 
-
-    
     % M1 = sin(0.1*ti);
     % M2 = sin(0.2*ti);
     % M3 = cos(0.2*ti);
     % Mc = [M1; M2; M3];
-
     
     % control_angs = [R_i_p(2,3), -R_i_p(1,3), R_i_p(1,2)]'; % assume a 3-2-1 rotation
     control_angs = [ax; ay; az]; % should get same result as above
-    Mc    = controlTorque_inertial(I_p, control_angs, wi);
+    Mc           = controlTorque_inertial(I_p, control_angs, wi);
 
     Mact = ComputeActuatorTorque(Lwi, Mc, wi, A, Astar)';
-    Mrot = A*Mact';
+    Mrot = A * Mact';
 
 
     Mactuator(ii,:) = Mact';

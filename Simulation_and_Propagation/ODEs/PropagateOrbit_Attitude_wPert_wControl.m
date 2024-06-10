@@ -18,7 +18,6 @@ caldate     = datetime(initialEpoch(1), initialEpoch(2), initialEpoch(3), 0, 0, 
 gmst        = CAL2GMST(initialEpoch(1), initialEpoch(2), initialEpoch(3), fractionDay);
 
 % Calculate control torque
-%%%% TO DO: ADD CONTROL TORQUE FUNCTION HERE %%%%%%%%%%%%
 
 % small angle approx. of angle error -- assume target attitude is [0 0 0 1]
 % this means the current attitude IS the error!
@@ -62,8 +61,8 @@ if SRP
 end
 
 % Total External Torque:
-% M_ext = actuatorTorque_pa + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa; 
-M_ext = -Mcontrol + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa;
+M_ext = actuatorTorque_pa + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa; 
+% M_ext = -Mcontrol + gravGrad_pa + magTorque_pa + dragTorque_pa + srpTorque_pa;
 
 % Propagate the orbit:
 orbit_dot = PropagateOrbit(rv, mu);

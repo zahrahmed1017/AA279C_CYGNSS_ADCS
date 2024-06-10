@@ -1,4 +1,4 @@
-function qw_d = PropagateAttitude_Quat(qw, M_vec, A, Astar, I_p)
+function qw_d = PropagateAttitude_Quat(qw, M_vec, I_p)
 
 % qw --> [q1 q2 q3 q4 w1 w2 w3]
 
