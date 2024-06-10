@@ -1,6 +1,13 @@
 function [state_d, gravGrad_pa, magTorque_pa, dragTorque_pa, srpTorque_pa] =...
-    PropagateOrbit_Attitude_wPert_wControl(state, I_p, mu, cygnss, A, Astar, timeStep,...
+    IntegratedODE(state, I_p, mu, cygnss, A, Astar, timeStep,...
     initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control)
+
+% TODO: check that all of the inputs and outputs are necessary/correct
+% other todos for this script:
+% - Add a mode input (earth pointing vs inertial)
+% - link incorporate KF somehow
+
+
 % quaternion is [q1 q2 q3 q0] (scalar last)
 
 % Unpack state:

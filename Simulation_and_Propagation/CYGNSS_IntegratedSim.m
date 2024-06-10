@@ -1,15 +1,36 @@
-% Control torque w/ no actuator model
+
 close all; clear;
 
 load("InertiaData.mat")
 load("cygnss.mat")
 
-% Run attitude propagation without any perturbations to show ideal attitude
-% propagation and then run with perturbations to show attitude error
+%% Simulation settings
 
-%%%% INITIALIZE ORBIT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+gravityGrad     = 0;
+magTorque       = 0;
+aeroDrag        = 0;
+SRP             = 0;
+control         = 1;
+
+%% Spacecraft configuration
+
+% reaction wheel triad
+A = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
+     0        , 1/sqrt(3), -1/sqrt(3);...
+    -1/sqrt(2), 1/sqrt(3),  1/sqrt(3)];
+Astar = pinv(A);
+
+% Magnetometer
+% TODO
+
+Lw_0  = [0; 0; 0];
+
+% TODO: anything needed to initialize sensors? error settings?
+
+%% Initial state - orbit, attitude, rates
+
 rE  = 6378; % km
-% a   = rE + 3000;     % km
 a   = rE + 525;
 e   = 0;
 i   = deg2rad(35);  % rad     
@@ -18,24 +39,27 @@ O   = deg2rad(120); % rad
 v   = deg2rad(0);   % rad        
 muE = 398600;       % [km^3/s^2]
 
-% Calculate ECI and RTN position and velocity for orbit propagation 
 oe          = [a; e; i; O; w; v];
 rv_state       = OE2ECI(oe, muE);
 RTNout      = rv2rtn(rv_state');
 A_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
 
+% TODO tweak the initial attitude + rates slightly so there is some error for
+% controller to correct
 
-%%%% INITIALIZE ATTITUDE AND ANGULAR RATES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set the initial attitude such that principal z is aligned with -R, x is
-% aligned with N and y aligned with T
-% R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
-% q_0 = dcm2quat(R_eci_nadirRTN);
-% q_0 = q_0([2 3 4 1])';
-% % w_0 = [sqrt(muE/(a^3)), 0, 0]';
+% Earth pointing attitude
+R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
+q_0 = dcm2quat(R_eci_nadirRTN);
+q_0 = q_0([2 3 4 1])';
+w_0 = [0, -sqrt(muE/(a^3)),  0]';
 
-% Arbitrary initial attitude, for inertial pointing
-q_0 = [0, 0, 0, 1]';
-w_0 = deg2rad([0.5, 0.1, 1]');
+% Inertial pointing attitude
+% q_0 = [0, 0, 0, 1]';
+% w_0 = deg2rad([0.5, 0.1, 1]');
+
+
+%% Simulation settings
+
 
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
@@ -47,32 +71,16 @@ t_span       = 0 : .5 : T * numPeriods; % simulate once an minute?
 
 %%%% INITIALIZE EPOCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 initialEpoch = [2016, 12, 16];
-
-%%% INITIALIZE REACTION WHEEL QUANTITIES %%%%%%%%
-A = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
-     0        , 1/sqrt(3), -1/sqrt(3);...
-    -1/sqrt(2), 1/sqrt(3),  1/sqrt(3)];
-% A     = eye(3,3);
-% A     = 1/sqrt(3) * [-1, 1, 1, -1; -1, -1, 1, 1; 1, 1, 1, 1];
-% Astar = (A'* A)^(-1) * A';
-Astar = pinv(A);
-Lw_0  = [0; 0; 0];
-
 timeStep = .5;
 
-%%%% RUN SIMULATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Run the simulation
 state_0 = [q_0; w_0; rv_state; Lw_0];
 M_vec = [0;0;0];
-options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-gravityGrad     = 0;
-magTorque       = 0;
-aeroDrag        = 0;
-SRP             = 0;
-control         = 1;
-[t_out, state_out] = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state, I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control ), t_span, state_0, options);
+
+[t_out, state_out] = ode113(@(t,state) IntegratedODE(state, I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control ), t_span, state_0, options);
 
 
-%% Plot results
+%% Plot results afterwards (anything we can't recover directly from state output)
 Mcontrol  = zeros(length(t_out), 3);
 Mactuator = zeros(length(t_out), 3);
 Mact_rot  = zeros(length(t_out), 3); 
