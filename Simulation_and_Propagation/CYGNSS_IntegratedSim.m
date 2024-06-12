@@ -134,7 +134,7 @@ gravityGrad     = 1;
 magTorque       = 1;
 aeroDrag        = 1;
 SRP             = 1;
-control         = 0;
+control         = 1;
 
 %% Run the simulation
 state_0 = [q_0; w_0; rv_state; Lw_0];
@@ -169,7 +169,7 @@ for i = 1:length(tspan)-1
     %%%%%%%%%%% STEP 1 - Get control torque and ground truth state for
     %%%%%%%%%%% measurement update in step 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     timeStep = tspan(i);
-    tspan_oneStep = tspan(i):dt:tspan(i+1);
+    tspan_oneStep = [tspan(i) tspan(i+1)];
     [t_prop, state_0]  = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state,...
         I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, calday, gravityGrad,...
         magTorque, aeroDrag, SRP, control ), tspan_oneStep, state_0, options);
