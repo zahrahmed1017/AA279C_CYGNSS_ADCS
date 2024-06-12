@@ -57,6 +57,6 @@ q_d = QuaternionKinematics(q,w);
 % Propagate Eulers: 
 w_d = PropagateEuler(w, M_ext, I_p);
 
-state_d = [q_d; w_d; orbit_dot; Lw_d];
+state_d = [q_d; w_d; orbit_dot];
 
 end
