@@ -39,8 +39,8 @@ w_0 = [0, -sqrt(muE/(a^3)),  0]';
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 0.1;
-dt          = 2; %seconds
+numPeriods  = 0.01;
+dt          = 0.05; %seconds
 tspan       = 0 : dt : T * numPeriods; % simulate once an minute?
 % tspan      = 0:0.5:200;
 
@@ -374,6 +374,7 @@ legend("q_1", "q_2", "q_3", "q_4", "q_{mag}")
 title("Numerically Propagated quaternions")
 fontsize(15,'points')
 xlabel('Time [s]')
+ylim([-1, 1])
 % saveas(gcf, "Figures_and_Plots/quat_integration_results_q.png")
 
 figure 
@@ -389,6 +390,7 @@ ylim([-1 1])
 fontsize(15,'points')
 title("MEKF quaternions")
 xlabel('Time [s]')
+ylim([-1, 1])
 % saveas(gcf, "Figures_and_Plots/quat_integration_results_q.png")
 
 
