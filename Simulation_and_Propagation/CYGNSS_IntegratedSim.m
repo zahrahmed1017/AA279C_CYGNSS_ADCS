@@ -138,7 +138,7 @@ control         = 1;
 
 %% Run the simulation
 state_0 = [q_0; w_0; rv_state; Lw_0];
-M_vec = [0;0;0];
+M_vec   = [0;0;0];
 
 %% Run Filter 
 
@@ -166,47 +166,47 @@ obj.I             = I_p;
 
 for i = 1:length(tspan)-1
 
-    %%%%%%%%%%% STEP 1 - Get control torque and ground truth state for
-    %%%%%%%%%%% measurement update in step 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     timeStep = tspan(i);
     tspan_oneStep = [tspan(i) tspan(i+1)];
-    [t_prop, state_0]  = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state,...
-        I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, calday, gravityGrad,...
-        magTorque, aeroDrag, SRP, control ), tspan_oneStep, state_0, options);
 
-    % State at current time t
-    q_t  = state_0(1,1:4)';
-    w_t  = state_0(1,5:7)';
-    rv_t = state_0(1,8:13)';
-    Lw_t = state_0(1,14:16)';
+    %%%%%%%%%%%%% CONTROL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    reacWheelTorque_pa  = [0;0;0];
+    magtorquerTorque_pa = [0;0;0];
 
-    % State at time t+1 (i.e. this is the "true" state at time t+1 that
-    % should be used in the measurement update)
-    q_t1  = state_0(end,1:4)';
-    w_t1  = state_0(end,5:7)';
-    rv_t1 = state_0(end,8:13)';
-    Lw_t1 = state_0(end,14:16)';
+    if ReacWheelOn
+         % Calculate the actual reaction wheel torque that will be used for
+         % control
+         reacWheelTorque    = Control2ReacWheelTorque(Lw_0, I_p, R_i_pa, w, A, Astar);
+         reacWheelTorque_pa = A * reacWheelTorque;
 
-    [az, ay, ax] = quat2angle( q_t([4 1 2 3])', 'ZYX' );
-    control_angs = [ax; ay; az]; % should get same result as above
-    Mc           = controlTorque_inertial(I_p, control_angs, w_t);
-    Mact = ComputeActuatorTorque(Lw_t, Mc, w_t, A, Astar)';
+         % Now integrate to find the new angular momentum of the reaction
+         % wheels if we were to apply that control torque given our current
+         % state and reset Lw_0 so at the next time step we have our
+         % updated reaction wheel angular momentum. 
+         [t_prop, Lw_out] = ode113(@(t,Lw) Control2ReacWheelTorque(Lw,...
+            I_p, R_i_pa, w, A, Astar),...
+            tspan_oneStep, Lw_0, options);
 
-    R_i_p    = quat2dcm(q_t([4 1 2 3])');
-    kmag = 7e-13; % based loosely on M&C
-    L_i = I_p * w_t; % TODO does this need to have cross product term in it?
-    L_tar = I_p * [0; -sqrt(muE/(a^3)); 0];
-    dH = L_i - L_tar;
-    [~,B_norm, B_vec_i] = CalculateMagneticTorque(w_t,calday, gmst);
-    B_p = R_i_p * B_vec_i;
-    Mmag = ComputeMagnetorquerTorque(dH, B_p,  kmag);
-
-
-    Mrot = A * Mact' + Mmag;
-
-    if ~control
-        Mrot = [0;0;0];
+         Lw_0 = Lw_out(end,:);
     end
+
+    if MagnetorquerOn
+        magtorquerTorque_pa = MagnetorquerWrapper(R_i_pa, rv, calday, gmst);
+    end
+
+    appliedControl = reacWheelTorque_pa + magtorquerTorque_pa; 
+
+    %%%%%%%%%%%%% PROPAGATE GROUND TRUTH  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    [gtTimeOut, gtState] = ode113(@(t,gtState)IntegratedODE(state, I_p, mu,...
+        cygnss, timeStep, initialEpoch, appliedControl,...
+        gravityGrad, magTorque, aeroDrag, SRP), tspan_oneStep, gtState_0, options);
+    
+
+    gtState_0 = gtState(end,:);
+
+
+    %%%%%%%%%%%% NAVIGATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     %%%%%%%%%%% STEP 2 filter.Propagate() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
