@@ -134,7 +134,7 @@ gravityGrad     = 1;
 magTorque       = 1;
 aeroDrag        = 1;
 SRP             = 1;
-control         = 1;
+control         = 0;
 
 %% Run the simulation
 state_0 = [q_0; w_0; rv_state; Lw_0];
@@ -171,7 +171,7 @@ for i = 1:length(tspan)-1
     timeStep = tspan(i);
     tspan_oneStep = tspan(i):dt:tspan(i+1);
     [t_prop, state_0]  = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state,...
-        I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad,...
+        I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, calday, gravityGrad,...
         magTorque, aeroDrag, SRP, control ), tspan_oneStep, state_0, options);
 
     % State at current time t
@@ -191,7 +191,23 @@ for i = 1:length(tspan)-1
     control_angs = [ax; ay; az]; % should get same result as above
     Mc           = controlTorque_inertial(I_p, control_angs, w_t);
     Mact = ComputeActuatorTorque(Lw_t, Mc, w_t, A, Astar)';
-    Mrot = A * Mact';
+
+    R_i_p    = quat2dcm(q_t([4 1 2 3])');
+    kmag = 7e-13; % based loosely on M&C
+    L_i = I_p * w_t; % TODO does this need to have cross product term in it?
+    L_tar = I_p * [0; -sqrt(muE/(a^3)); 0];
+    dH = L_i - L_tar;
+    [~,B_norm, B_vec_i] = CalculateMagneticTorque(w_t,calday, gmst);
+    B_p = R_i_p * B_vec_i;
+    Mmag = ComputeMagnetorquerTorque(dH, B_p,  kmag);
+
+
+    Mrot = A * Mact' + Mmag;
+
+    if ~control
+        Mrot = [0;0;0];
+    end
+
 
     %%%%%%%%%%% STEP 2 filter.Propagate() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 1.1 QuatKin_Linear_Discrete
