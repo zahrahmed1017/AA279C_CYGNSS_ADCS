@@ -69,7 +69,7 @@ magTorque       = 0;
 aeroDrag        = 0;
 SRP             = 0;
 control         = 1;
-[t_out, state_out] = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state, I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control ), t_span, state_0, options);
+[t_out, state_out] = ode113(@(t,state) PropagateOrbit_Attitude_wPert_wControl(state, I_p, muE, cygnss, A, Astar, timeStep, initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control), t_span, state_0, options);
 
 
 %% Plot results
