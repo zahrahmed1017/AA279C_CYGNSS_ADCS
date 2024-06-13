@@ -1,4 +1,4 @@
-close all;
+% close all;
 clear;
 load("InertiaData.mat")
 load("cygnss.mat")
@@ -21,16 +21,19 @@ muE = 398600;       % [km^3/s^2]
 oe       = [a; e; i; O; w; v];
 rv_state = OE2ECI(oe, muE);
 % Initial attitude:
-e_vec = [1;1;1]; 
-e     = e_vec/ norm(e_vec);
-p     = 0; % for PS4-Q1
-q_0   = [e(1)*sin(p/2);
-         e(2)*sin(p/2);
-         e(3)*sin(p/2);
-         cos(p/2)];
-dcm_0 = quat2dcm(q_0([4 1 2 3])');
-% Initial angular velocity:
-w_0         = [deg2rad(1), deg2rad(0), deg2rad(1)]';
+% e_vec = [1;1;1]; 
+% e     = e_vec/ norm(e_vec);
+% p     = 0; % for PS4-Q1
+% q_0   = [e(1)*sin(p/2);
+%          e(2)*sin(p/2);
+%          e(3)*sin(p/2);
+%          cos(p/2)];
+% dcm_0 = quat2dcm(q_0([4 1 2 3])');
+% % Initial angular velocity:
+% w_0         = [deg2rad(1), deg2rad(0), deg2rad(1)]';
+
+q_0 = [0, 0, 0, 1]';
+w_0 = deg2rad([0.5, 0.1, 1]');
 
 
 %%%% Initial Epoch for Testing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,7 +49,7 @@ numPeriods  = 0.1;
 dt          = 2; %seconds
 tspan       = 0 : dt : T * numPeriods; % 
 
-% propagate orbit (no perturbations for now)
+% propagate orbit
 state_0     = [q_0; w_0; rv_state];
 gravityGrad = 1;
 magTorque   = 1;
@@ -406,6 +409,28 @@ plot(t_q, w_mekf(:,3) - qw_prop(:,7),  'LineWidth', 2)
 title('Error angular velocity')
 legend('wx', 'wy', 'wz')
 fontsize(14,'points')
+
+%% Compare Euler Angles
+
+all_angs_mekf = zeros(length(t_q), 3); 
+
+for ii = 1:length(t_q)
+    [az, ay, ax]         = quat2angle(q_mekf(ii,[4 1 2 3]), 'ZYX');
+    all_angs_mekf(ii, :) = [ax, ay, az];
+
+end
+
+figure 
+hold on
+grid on
+plot(t_q/3600, rad2deg(all_angs_mekf(:,1)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(all_angs_mekf(:,2)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(all_angs_mekf(:,3)), 'LineWidth', 2 )
+legend("X rotation", "Y rotation", "Z rotation")
+ylabel("Euler angle, degrees")
+xlabel("Time, hours")
+title("MEKF Attitude, Euler angles")
+
 
 %% Plot covariance errors
 n = length(tspan);
