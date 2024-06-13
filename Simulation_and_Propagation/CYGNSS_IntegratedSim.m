@@ -25,15 +25,16 @@ rv          = rv_state;
 
 %%%%%%% INITIAL ATTITUDE AND RATES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Earth pointing attitude
-% R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
-% q_0 = dcm2quat(R_eci_nadirRTN);
-% q_0 = q_0([2 3 4 1])';
-% w_0 = [0, -sqrt(muE/(a^3)),  0]';
+R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
+q_0 = dcm2quat((eye(3) - crossMatrix([0.01; 0.02; 0.01]))*R_eci_nadirRTN); % adding some error
+q_0 = q_0([2 3 4 1])';
+w_0 = [sqrt(muE/(a^3)) + deg2rad(0.5), deg2rad(0.2), deg2rad(0.5)]';
 % R_i_pa = R_eci_nadirRTN; 
 
 % Inertial pointing attitude
-q_0 = [0, 0, 0, 1]';
-w_0 = deg2rad([0.5, 0.1, 1]');
+% q_0 = [0, 0, 0, 1]';
+% w_0 = deg2rad([0.5, 0.1, 1]');
+
 R_i_pa = quat2dcm(q_0([4 1 2 3])');
 
 w           = w_0;
@@ -42,7 +43,7 @@ gtState_0   = [q_0; w_0; rv_state];
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = 1;
+numPeriods  = .2;
 dt          = 0.1; %seconds
 tspan       = 0 : dt : T * numPeriods; % simulate once an minute?
 
@@ -130,7 +131,7 @@ magTorque       = 1;
 aeroDrag        = 1;
 SRP             = 1;
 ReacWheelOn     = 1;
-MagnetorquerOn  = 0;
+MagnetorquerOn  = 1;
 
 
 %% Run Filter 
@@ -145,6 +146,7 @@ postfit_err = zeros(length(tspan), 6);
 cov_mekf    = zeros(length(tspan), 3);
 kgain_mekf  = zeros(length(tspan), 1);
 gtState_all = zeros(length(tspan), 7);
+gtAngsRTN   = zeros(length(tspan), 3);
 actControl  = zeros(length(tspan), 3);
 
 if size(filter_state_0,2) ~= 1
@@ -180,14 +182,14 @@ for i = 1:length(tspan) - 1
          % state and reset Lw_0 so at the next time step we have our
          % updated reaction wheel angular momentum. 
          [t_prop, Lw_out] = ode113(@(t,Lw) Control2ReacWheelTorque(Lw,...
-            I_p, R_i_pa, w, A, Astar),...
+            I_p, R_i_pa, w, A, Astar, rv),...
             tspan_oneStep, Lw_0, options);
 
          Lw_0 = Lw_out(end,:);
     end
 
     if MagnetorquerOn
-        magtorquerTorque_pa = MagnetorquerWrapper(R_i_pa, I_p, rv, w, calday, gmst);
+        magtorquerTorque_pa = MagnetorquerWrapper(R_i_pa, rv, calday, gmst, I_p);
     end
 
     appliedControl  = reacWheelTorque_pa + magtorquerTorque_pa; 
@@ -201,6 +203,12 @@ for i = 1:length(tspan) - 1
     
     % This will be used to compute our "true" measurements and also as the
     % initial condition for next time step. 
+    q_t0       = gtState_0(1:4);
+    if size(q_t0,2) ~= 1
+        q_t0 = q_t0';
+    end
+    R_i_pa_t0 = quat2dcm(q_t0([4 1 2 3])');
+    
     gtState_0 = gtState(end,:);
     q_t1      = gtState(end, 1:4);
     w_t1      = gtState(end, 5:7);
@@ -208,6 +216,13 @@ for i = 1:length(tspan) - 1
     R_i_pa_t1 = quat2dcm(q_t1([4 1 2 3]'));
 
     gtState_all(i, :) = gtState_0(1:7);
+
+    % save attitude wrt RTN frame
+    RTNout      = rv2rtn(rv');
+    R_eci_rtn   = [0 0 1; 0 1 0; -1 0 0] *[RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
+    R_rtn_p = R_i_pa_t0 * R_eci_rtn';
+    [az_r, ay_r, ax_r] = dcm2angle( R_rtn_p, 'ZYX' );
+    gtAngsRTN(i,:) =  [az_r, ay_r, ax_r];
 
     %%%%%%%%%%%% NAVIGATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -360,7 +375,7 @@ for i = 1:length(tspan) - 1
    % Closed-loop, the controller is updated using estimated state;
    R_i_pa = R_est;
    w      = obj.state(5:7);
-   rv     = rv_t1;
+   rv     = rv_t1';
    
 end
 
@@ -434,7 +449,7 @@ for ii = 1:length(t_q)
 end
 
 figure 
-subplot(2,1,1)
+subplot(3,1,1)
 hold on
 grid on
 plot(t_q/3600, rad2deg(all_angs_gt(:,1)), 'LineWidth', 2 )
@@ -445,7 +460,19 @@ ylabel("Euler angle, degrees")
 xlabel("Time, hours")
 title("Ground Truth Attitude, Euler angles")
 
-subplot(2,1,2)
+subplot(3,1,2)
+hold on
+grid on
+plot(t_q/3600, rad2deg(gtAngsRTN(:,1)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(gtAngsRTN(:,2)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(gtAngsRTN(:,3)), 'LineWidth', 2 )
+legend("X rotation", "Y rotation", "Z rotation")
+ylabel("Euler angle, degrees")
+xlabel("Time, hours")
+title("Ground Truth Attitude in RTN frame, Euler angles")
+
+
+subplot(3,1,3)
 hold on
 grid on
 plot(t_q/3600, rad2deg(all_angs_mekf(:,1)), 'LineWidth', 2 )

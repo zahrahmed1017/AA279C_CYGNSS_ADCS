@@ -30,8 +30,8 @@ A_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
 % aligned with N and y aligned with T
 % add some initial error to the rates (TODO add some error to attitude too)
 R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
-% q_0 = dcm2quat((eye(3) - crossMatrix([0.01; 0.02; 0.01]))*R_eci_nadirRTN);
-q_0 = dcm2quat(R_eci_nadirRTN);
+q_0 = dcm2quat((eye(3) - crossMatrix([0.01; 0.02; 0.01]))*R_eci_nadirRTN);
+% q_0 = dcm2quat(R_eci_nadirRTN);
 q_0 = q_0([2 3 4 1])';
 w_0 = [sqrt(muE/(a^3)) + deg2rad(0.5), deg2rad(0.2), deg2rad(0.5)]';
 
