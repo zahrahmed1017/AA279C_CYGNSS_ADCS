@@ -46,12 +46,18 @@ sample_period = 0.1; % sampling frequency is 10 Hz
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
 % numPeriods  = 0.5;
-numPeriods = .1;
+numPeriods = .05;
 t_span       = 0 : sample_period : T * numPeriods; % simulate once an minute?
 % t_span      = 0:0.5:200;
 
 %%%% INITIALIZE EPOCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 initialEpoch = [2016, 12, 16];
+
+dt           = sample_period;
+fractionDay  = dt/86400;
+calday       = datetime(initialEpoch(1),initialEpoch(2), initialEpoch(3),0,0,dt);
+gmst         = CAL2GMST(initialEpoch(1),initialEpoch(2), initialEpoch(3), fractionDay);
+
 
 %%% INITIALIZE REACTION WHEEL QUANTITIES %%%%%%%%
 A = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
@@ -93,6 +99,8 @@ all_angs  = zeros(length(t_span), 3);
 all_rates = zeros(length(t_span), 3); 
 all_angs_rtn = zeros(length(t_span), 3); 
 
+all_sc_mom = zeros(length(t_span), 3); 
+
 last_time = 0;
 
 
@@ -115,7 +123,8 @@ for i = 2:length(t_span) % skip time step 0
     Lw_0 = Lw_out(end,:)';
 
     % TODO add reaction wheel control here
-    magnetorquerTorque_pa = [0;0;0];
+    magnetorquerTorque_pa = MagnetorquerWrapper(R_i_p, rv_state, calday, gmst, I_p);
+    % magnetorquerTorque_pa = [0;0;0];
 
     appliedTorque_pa = reacWheelTorque_pa + magnetorquerTorque_pa;
 
@@ -142,6 +151,8 @@ for i = 2:length(t_span) % skip time step 0
     all_angs_rtn(i,:) = [az_r, ay_r, ax_r];
 
     all_rates(i, :) = wi;
+
+    all_sc_mom(i,:) = I_p * wi; % should this have the second cross product term too?
 
     % M1 = sin(0.1*ti);
     % M2 = sin(0.2*ti);
@@ -280,3 +291,14 @@ legend("X rate", "Y rate", "Z rate")
 ylabel("Body rates, degrees/s")
 xlabel("Time, seconds")
 title("Rates")
+
+figure 
+hold on
+grid on
+plot(t_span, rad2deg(all_sc_mom(:,1)), 'LineWidth', 2 )
+plot(t_span, rad2deg(all_sc_mom(:,2)), 'LineWidth', 2 )
+plot(t_span, rad2deg(all_sc_mom(:,3)), 'LineWidth', 2 )
+legend("X ang. momentum", "Y ang. momentum", "Z ang. momentum")
+ylabel("Angular momentum (body frame)")
+xlabel("Time, seconds")
+title("Spacecraft angular momentum")

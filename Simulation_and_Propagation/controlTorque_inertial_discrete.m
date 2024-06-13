@@ -5,8 +5,8 @@ function Mc = controlTorque_inertial_discrete(I_p, a, a_dot)
 
 % Mc = I * w_dot;
 
-% f = 1/20;
 f = 1/20;
+% f = 1/100;
 
 k_p = zeros(3,1);
 k_d = zeros(3,1);
