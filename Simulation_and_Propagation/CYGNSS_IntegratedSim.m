@@ -120,6 +120,7 @@ A     = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
         -1/sqrt(2), 1/sqrt(3),  1/sqrt(3)];
 Astar = pinv(A);
 Lw_0  = [0; 0; 0];
+actuatorNoiseStd = 0.00005;
 
 %% Simulation settings
 
@@ -170,7 +171,8 @@ for i = 1:length(tspan) - 1
     if ReacWheelOn
          % Calculate the actual reaction wheel torque that will be used for
          % control
-         reacWheelTorque    = Control2ReacWheelTorque(Lw_0, I_p, R_i_pa, w, A, Astar);
+         reacWheelTorque    = Control2ReacWheelTorque(Lw_0, I_p, R_i_pa, w, A, Astar, rv);
+         reacWheelTorque    = reacWheelTorque + rand(3,1)*actuatorNoiseStd; 
          reacWheelTorque_pa = A * reacWheelTorque;
 
          % Now integrate to find the new angular momentum of the reaction
@@ -354,9 +356,11 @@ for i = 1:length(tspan) - 1
    % % Open-loop, the controller is updated using ground truth
    % R_i_pa = R_i_pa_t1;
    % w      = w_t1';
+   % rv     = rv_t1';
    % Closed-loop, the controller is updated using estimated state;
    R_i_pa = R_est;
    w      = obj.state(5:7);
+   rv     = rv_t1;
    
 end
 

@@ -1,6 +1,6 @@
 function [state_d, gravGrad_pa, magTorque_pa, dragTorque_pa, srpTorque_pa] =...
     PropagateOrbit_Attitude_wPert_wControl(state, I_p, mu, cygnss, A, Astar, timeStep,...
-    initialEpoch, calday, gravityGrad, magTorque, aeroDrag, SRP, control)
+    initialEpoch, gravityGrad, magTorque, aeroDrag, SRP, control)
 % quaternion is [q1 q2 q3 q0] (scalar last)
 
 % Unpack state:
@@ -42,7 +42,7 @@ if control
     L_i = I_p * w; % TODO does this need to have cross product term in it?
     L_tar = I_p * [0; -n; 0];
     dH = L_i - L_tar;
-    [~,B_norm, B_vec_i] = CalculateMagneticTorque(rv(1:3) ,calday, gmst);
+    [~,B_norm, B_vec_i] = CalculateMagneticTorque(rv(1:3) ,caldate, gmst);
     B_p = R_i_pa * B_vec_i;
     M_mag = ComputeMagnetorquerTorque(dH, B_p, kmag);
 end

@@ -80,6 +80,8 @@ Mact_rot  = zeros(length(t_out), 3);
 all_angs = zeros(length(t_out), 3); 
 all_rates = zeros(length(t_out), 3); 
 
+sigma = 0.00005;
+
 for ii = 1:length(t_out)
     
     ti  = t_out(ii);
@@ -104,6 +106,9 @@ for ii = 1:length(t_out)
     Mc           = controlTorque_inertial(I_p, control_angs, wi);
 
     Mact = ComputeActuatorTorque(Lwi, Mc, wi, A, Astar)';
+
+    Mact = Mact + randn(3,1)'*sigma; 
+
     Mrot = A * Mact';
 
 
@@ -116,6 +121,7 @@ end
 t_hr = t_out/3600;
 
 figure()
+subplot(1,2,1)
 plot(t_hr, Mcontrol(:,1), 'LineWidth', 2)
 grid on;
 hold on;
@@ -127,7 +133,7 @@ title('Input Control Torque')
 legend('Mx', 'My', 'Mz')
 fontsize(14,'points')
 
-figure()
+subplot(1,2,2)
 plot(t_hr, Mact_rot(:,1), 'LineWidth', 2);
 hold on;
 grid on;
