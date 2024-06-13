@@ -16,7 +16,9 @@ function Lw_d = Control2ReacWheelTorque(Lw, I_p, R_i_pa, w, A, Astar, rv)
 
         % get RTN frame
         RTNout      = rv2rtn(rv');
-        R_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
+        R_eci_rtn   = [0 0 1; 0 1 0; -1 0 0] * [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
+        % R_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
+     
 
         R_error     = R_i_pa * R_eci_rtn';
         w_error     = w - [n; 0; 0];

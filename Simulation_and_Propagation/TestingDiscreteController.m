@@ -30,6 +30,7 @@ A_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
 % aligned with N and y aligned with T
 % add some initial error to the rates (TODO add some error to attitude too)
 R_eci_nadirRTN = [0 0 1; 0 1 0; -1 0 0] * A_eci_rtn;
+% q_0 = dcm2quat((eye(3) - crossMatrix([0.01; 0.02; 0.01]))*R_eci_nadirRTN);
 q_0 = dcm2quat(R_eci_nadirRTN);
 q_0 = q_0([2 3 4 1])';
 w_0 = [sqrt(muE/(a^3)) + deg2rad(0.5), deg2rad(0.2), deg2rad(0.5)]';
@@ -67,7 +68,8 @@ A = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
 % A     = 1/sqrt(3) * [-1, 1, 1, -1; -1, -1, 1, 1; 1, 1, 1, 1];
 % Astar = (A'* A)^(-1) * A';
 Astar = pinv(A);
-Lw_0  = [0; 0; 0];
+% Lw_0  = [0; 0; 0];
+Lw_0    = [0.05; 0.05; 0.05];
 
 % timeStep = .5;
 
@@ -101,6 +103,8 @@ all_angs_rtn = zeros(length(t_span), 3);
 
 all_sc_mom = zeros(length(t_span), 3); 
 
+all_lw_m   = zeros(length(t_span), 3); 
+
 last_time = 0;
 
 
@@ -122,9 +126,14 @@ for i = 2:length(t_span) % skip time step 0
     
     Lw_0 = Lw_out(end,:)';
 
+    all_lw_m(i,:) = Lw_0;
+
     % TODO add reaction wheel control here
     magnetorquerTorque_pa = MagnetorquerWrapper(R_i_p, rv_state, calday, gmst, I_p);
     % magnetorquerTorque_pa = [0;0;0];
+    % if i > 2*length(t_span) / 3
+    %     blah = 3
+    % end
 
     appliedTorque_pa = reacWheelTorque_pa + magnetorquerTorque_pa;
 
@@ -145,7 +154,7 @@ for i = 2:length(t_span) % skip time step 0
     all_angs(i, :) = [ax, ay, az];
 
     RTNout      = rv2rtn(rv_state');
-    R_eci_rtn   = [RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
+    R_eci_rtn   = [0 0 1; 0 1 0; -1 0 0] *[RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
     R_rtn_p = R_i_p * R_eci_rtn';
     [az_r, ay_r, ax_r] = dcm2angle( R_rtn_p, 'ZYX' );
     all_angs_rtn(i,:) = [az_r, ay_r, ax_r];
@@ -295,9 +304,9 @@ title("Rates")
 figure 
 hold on
 grid on
-plot(t_span, rad2deg(all_sc_mom(:,1)), 'LineWidth', 2 )
-plot(t_span, rad2deg(all_sc_mom(:,2)), 'LineWidth', 2 )
-plot(t_span, rad2deg(all_sc_mom(:,3)), 'LineWidth', 2 )
+plot(t_span, all_sc_mom(:,1), 'LineWidth', 2 )
+plot(t_span, all_sc_mom(:,2), 'LineWidth', 2 )
+plot(t_span, all_sc_mom(:,3), 'LineWidth', 2 )
 legend("X ang. momentum", "Y ang. momentum", "Z ang. momentum")
 ylabel("Angular momentum (body frame)")
 xlabel("Time, seconds")
