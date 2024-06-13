@@ -43,7 +43,7 @@ gtState_0   = [q_0; w_0; rv_state];
 %%%% SET SIMULATION TIME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 T           = 2*pi*sqrt(a^3/muE); % period in seconds
 T_days      = T/(24 * 60 * 60);
-numPeriods  = .2;
+numPeriods  = .05;
 dt          = 0.1; %seconds
 tspan       = 0 : dt : T * numPeriods; % simulate once an minute?
 
@@ -148,6 +148,7 @@ kgain_mekf  = zeros(length(tspan), 1);
 gtState_all = zeros(length(tspan), 7);
 gtAngsRTN   = zeros(length(tspan), 3);
 actControl  = zeros(length(tspan), 3);
+estAngsRTN = zeros(length(tspan), 3);
 
 if size(filter_state_0,2) ~= 1
     filter_state_0 = filter_state_0';
@@ -220,9 +221,9 @@ for i = 1:length(tspan) - 1
     % save attitude wrt RTN frame
     RTNout      = rv2rtn(rv');
     R_eci_rtn   = [0 0 1; 0 1 0; -1 0 0] *[RTNout(1:3)', RTNout(4:6)', RTNout(7:9)' ]';
-    R_rtn_p = R_i_pa_t0 * R_eci_rtn';
+    R_rtn_p = R_i_pa_t1 * R_eci_rtn';
     [az_r, ay_r, ax_r] = dcm2angle( R_rtn_p, 'ZYX' );
-    gtAngsRTN(i,:) =  [az_r, ay_r, ax_r];
+    gtAngsRTN(i,:) =  [ax_r, ay_r, az_r];
 
     %%%%%%%%%%%% NAVIGATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -376,6 +377,9 @@ for i = 1:length(tspan) - 1
    R_i_pa = R_est;
    w      = obj.state(5:7);
    rv     = rv_t1';
+
+   [az_r_e, ay_r_e, ax_r_e] = dcm2angle(R_i_pa * R_eci_rtn', 'ZYX');
+   estAngsRTN(i,:) = [ax_r_e, ay_r_e, az_r_e] ;
    
 end
 
@@ -449,18 +453,18 @@ for ii = 1:length(t_q)
 end
 
 figure 
-subplot(3,1,1)
-hold on
-grid on
-plot(t_q/3600, rad2deg(all_angs_gt(:,1)), 'LineWidth', 2 )
-plot(t_q/3600, rad2deg(all_angs_gt(:,2)), 'LineWidth', 2 )
-plot(t_q/3600, rad2deg(all_angs_gt(:,3)), 'LineWidth', 2 )
-legend("X rotation", "Y rotation", "Z rotation")
-ylabel("Euler angle, degrees")
-xlabel("Time, hours")
-title("Ground Truth Attitude, Euler angles")
+% subplot(3,1,1)
+% hold on
+% grid on
+% plot(t_q/3600, rad2deg(all_angs_gt(:,1)), 'LineWidth', 2 )
+% plot(t_q/3600, rad2deg(all_angs_gt(:,2)), 'LineWidth', 2 )
+% plot(t_q/3600, rad2deg(all_angs_gt(:,3)), 'LineWidth', 2 )
+% legend("X rotation", "Y rotation", "Z rotation")
+% ylabel("Euler angle, degrees")
+% xlabel("Time, hours")
+% title("Ground Truth Attitude, Euler angles")
 
-subplot(3,1,2)
+subplot(2,1,1)
 hold on
 grid on
 plot(t_q/3600, rad2deg(gtAngsRTN(:,1)), 'LineWidth', 2 )
@@ -469,20 +473,23 @@ plot(t_q/3600, rad2deg(gtAngsRTN(:,3)), 'LineWidth', 2 )
 legend("X rotation", "Y rotation", "Z rotation")
 ylabel("Euler angle, degrees")
 xlabel("Time, hours")
+ylim([-8, 5])
 title("Ground Truth Attitude in RTN frame, Euler angles")
 
 
-subplot(3,1,3)
+subplot(2,1,2)
 hold on
 grid on
-plot(t_q/3600, rad2deg(all_angs_mekf(:,1)), 'LineWidth', 2 )
-plot(t_q/3600, rad2deg(all_angs_mekf(:,2)), 'LineWidth', 2 )
-plot(t_q/3600, rad2deg(all_angs_mekf(:,3)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(estAngsRTN(:,1)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(estAngsRTN(:,2)), 'LineWidth', 2 )
+plot(t_q/3600, rad2deg(estAngsRTN(:,3)), 'LineWidth', 2 )
 legend("X rotation", "Y rotation", "Z rotation")
 ylabel("Euler angle, degrees")
 xlabel("Time, hours")
-title("MEKF Attitude, Euler angles")
+ylim([-8, 5])
+title("MEKF Attitude in RTN frame, Euler angles")
 
+% saveas(gcf, "Figures_and_Plots/PS10/Integrated_AngleRTN.png" )
 
 %% Plot state errors (desired state vs estimated state)
 
@@ -523,18 +530,18 @@ title('MEKF angular velocity')
 legend('wx', 'wy', 'wz')
 fontsize(14,'points')
 subplot(3,1,2)
-plot(t_q, qw_prop(:,5), 'LineWidth', 2)
+plot(t_q, gtState_all(:,5), 'LineWidth', 2)
 hold on
-plot(t_q, qw_prop(:,6), 'LineWidth', 2)
-plot(t_q, qw_prop(:,7), 'LineWidth', 2)
+plot(t_q, gtState_all(:,6), 'LineWidth', 2)
+plot(t_q, gtState_all(:,7), 'LineWidth', 2)
 title('Numerical prop angular velocity')
 legend('wx', 'wy', 'wz')
 fontsize(14,'points')
 subplot(3,1,3)
-plot(t_q, w_mekf(:,1) - qw_prop(:,5),  'LineWidth', 2)
+plot(t_q, w_mekf(:,1) - gtState_all(:,5),  'LineWidth', 2)
 hold on;
-plot(t_q, w_mekf(:,2) - qw_prop(:,6),  'LineWidth', 2)
-plot(t_q, w_mekf(:,3) - qw_prop(:,7),  'LineWidth', 2)
+plot(t_q, w_mekf(:,2) - gtState_all(:,6),  'LineWidth', 2)
+plot(t_q, w_mekf(:,3) - gtState_all(:,7),  'LineWidth', 2)
 title('Error angular velocity')
 legend('wx', 'wy', 'wz')
 fontsize(14,'points')

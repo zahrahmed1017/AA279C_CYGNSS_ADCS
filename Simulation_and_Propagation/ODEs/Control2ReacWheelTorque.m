@@ -1,6 +1,6 @@
 function Lw_d = Control2ReacWheelTorque(Lw, I_p, R_i_pa, w, A, Astar, rv)
     
-    earthPointing = false;
+    earthPointing = true;
 
     % state     = Lw (angular momentum of the reaction wheel triad)
     % state_dot = reaction wheel torque FOR EACH REACTION WHEEL, NOTTTTT in
