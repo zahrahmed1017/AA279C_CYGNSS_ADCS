@@ -115,7 +115,7 @@ B = [1/I_p(1,1), 0, 0; 0 1/I_p(2,2) 0; 0, 0, 1/I_p(3,3)];
 
 %% Attitude Control: Spacecraft actuators
 
-% reaction wheel triad
+% reaction wheel triad  
 A     = [1/sqrt(2), 1/sqrt(3),  1/sqrt(3);...
          0        , 1/sqrt(3), -1/sqrt(3);...
         -1/sqrt(2), 1/sqrt(3),  1/sqrt(3)];
