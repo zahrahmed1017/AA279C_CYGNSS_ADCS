@@ -1,4 +1,4 @@
-function M_mag = MagnetorquerWrapper(R_i_pa, rv, calday, gmst)
+function M_mag = MagnetorquerWrapper(R_i_pa, I_p, rv, w, calday, gmst)
 
     % Given the current ECI position and time, computes the
     % magnetorquer torque
